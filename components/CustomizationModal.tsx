@@ -28,10 +28,12 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ drink, isOpen, 
   const [selectedCustomizations, setSelectedCustomizations] = useState<Record<string, string>>(getDefaultCustomizations());
 
   useEffect(() => {
-    // Reset state when drink changes
-    setQuantity(1);
-    setSelectedCustomizations(getDefaultCustomizations());
-  }, [drink]);
+    if (isOpen) {
+        // Reset state when modal opens for a new drink
+        setQuantity(1);
+        setSelectedCustomizations(getDefaultCustomizations());
+    }
+  }, [drink, isOpen]);
 
   if (!isOpen) return null;
 
@@ -65,57 +67,58 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ drink, isOpen, 
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md m-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Customize your drink</h2>
+          <h2 className="text-xl font-semibold">Customize Your Drink</h2>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6 max-h-[60vh] overflow-y-auto">
-          <div className="flex gap-4 mb-6">
-            <img src={drink.imageUrls[0]} alt={drink.name} className="w-24 h-24 rounded-md object-cover"/>
-            <div>
-                <h3 className="text-lg font-bold">{drink.name}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{drink.description}</p>
+        <div className="flex-grow overflow-y-auto max-h-[70vh]">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="p-6">
+                <img src={drink.imageUrls[0]} alt={drink.name} className="w-full h-64 rounded-md object-cover"/>
             </div>
-          </div>
-          
-          <div className="space-y-4">
-            {drink.customizations?.map(cust => (
-              <div key={cust.id}>
-                <h4 className="font-semibold mb-2">{cust.name}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {cust.options.map(opt => (
-                    <button
-                      key={opt.id}
-                      onClick={() => handleCustomizationChange(cust.id, opt.id)}
-                      className={`px-4 py-2 text-sm rounded-full border transition-colors ${
-                        selectedCustomizations[cust.id] === opt.id
-                          ? 'bg-brand-600 text-white border-brand-600'
-                          : 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600'
-                      }`}
-                    >
-                      {opt.name} {opt.priceModifier ? `(+$${opt.priceModifier.toFixed(2)})` : ''}
-                    </button>
-                  ))}
+            <div className="p-6">
+                <h3 className="text-2xl font-bold">{drink.name}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 mb-6">{drink.description}</p>
+                <div className="space-y-4">
+                    {drink.customizations?.map(cust => (
+                    <div key={cust.id}>
+                        <h4 className="font-semibold mb-2">{cust.name}</h4>
+                        <div className="flex flex-wrap gap-2">
+                        {cust.options.map(opt => (
+                            <button
+                            key={opt.id}
+                            onClick={() => handleCustomizationChange(cust.id, opt.id)}
+                            className={`px-4 py-2 text-sm rounded-full border transition-colors ${
+                                selectedCustomizations[cust.id] === opt.id
+                                ? 'bg-brand-500 text-white border-brand-500'
+                                : 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600'
+                            }`}
+                            >
+                            {opt.name} {opt.priceModifier ? `(+$${opt.priceModifier.toFixed(2)})` : ''}
+                            </button>
+                        ))}
+                        </div>
+                    </div>
+                    ))}
                 </div>
-              </div>
-            ))}
+            </div>
           </div>
         </div>
 
-        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"><MinusIcon className="w-5 h-5"/></button>
-            <span className="w-8 text-center font-semibold">{quantity}</span>
-            <button onClick={() => setQuantity(q => q + 1)} className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"><PlusIcon className="w-5 h-5"/></button>
+        <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="p-3 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"><MinusIcon className="w-5 h-5"/></button>
+            <span className="w-10 text-center font-semibold text-lg">{quantity}</span>
+            <button onClick={() => setQuantity(q => q + 1)} className="p-3 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"><PlusIcon className="w-5 h-5"/></button>
           </div>
           <button
             onClick={handleAddToCart}
-            className="bg-brand-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-brand-700 transition-colors"
+            className="w-full sm:w-auto flex-grow bg-brand-500 text-white font-semibold px-6 py-3 rounded-md hover:bg-brand-600 transition-colors"
           >
             Add To Cart - ${calculateTotalPrice().toFixed(2)}
           </button>

@@ -81,10 +81,10 @@ const AppContent: React.FC = () => {
             <CartProvider>
                 <NotificationProvider>
                     <Router>
-                        <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+                        <div className="flex flex-col min-h-screen bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-200">
                             <Header />
                             <NotificationContainer />
-                            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-10">
                                 <Routes>
                                     <Route path="/" element={<HomeRouter />} />
                                     <Route path="/dashboard" element={<ProtectedRoute><HomeRouter /></ProtectedRoute>} />
