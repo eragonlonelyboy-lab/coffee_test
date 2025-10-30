@@ -38,7 +38,10 @@ const HomePage: React.FC = () => {
         <h2 className="text-3xl font-bold text-center mb-8">Our Fan Favorites</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredDrinks.map(drink => (
-            <DrinkCard key={drink.id} drink={drink} onSelect={() => {}} />
+            <DrinkCard key={drink.id} drink={drink} onSelect={(drink, quantity) => {
+                // To fully implement this, HomePage would need to manage the CustomizationModal
+                // For now, this is a no-op to satisfy the type change. A user could be navigated to the menu.
+            }} />
           ))}
         </div>
       </section>

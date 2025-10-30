@@ -1,17 +1,18 @@
 import React from 'react';
 import { User, UserTier } from '../../types';
 import { ShieldCheckIcon, StarIcon } from '../../assets/icons';
+import { tierPointMultipliers } from '../../utils/tierUtils';
 
 interface CurrentTierCardProps {
     user: User;
 }
 
 export const tierDetails = {
-  [UserTier.Bronze]: { color: 'bg-yellow-600', benefits: ['1x Points per $1', 'Member-only offers'] },
-  [UserTier.Silver]: { color: 'bg-gray-400', benefits: ['1.1x Points per $1', 'Free Birthday Drink'] },
-  [UserTier.Gold]: { color: 'bg-yellow-500', benefits: ['1.2x Points per $1', 'Free monthly pastry'] },
-  [UserTier.Platinum]: { color: 'bg-blue-400', benefits: ['1.5x Points per $1', 'Early access to new items'] },
-  [UserTier.Elite]: { color: 'bg-purple-500', benefits: ['2x Points per $1', 'Exclusive events'] },
+  [UserTier.Bronze]: { color: 'bg-yellow-600', benefits: [`${tierPointMultipliers[UserTier.Bronze]}x Points per $1`, 'Member-only offers'] },
+  [UserTier.Silver]: { color: 'bg-gray-400', benefits: [`${tierPointMultipliers[UserTier.Silver]}x Points per $1`, 'Free Birthday Drink'] },
+  [UserTier.Gold]: { color: 'bg-yellow-500', benefits: [`${tierPointMultipliers[UserTier.Gold]}x Points per $1`, 'Free monthly pastry'] },
+  [UserTier.Platinum]: { color: 'bg-blue-400', benefits: [`${tierPointMultipliers[UserTier.Platinum]}x Points per $1`, 'Early access to new items'] },
+  [UserTier.Elite]: { color: 'bg-purple-500', benefits: [`${tierPointMultipliers[UserTier.Elite]}x Points per $1`, 'Exclusive events'] },
 };
 
 const tierData = {
@@ -47,7 +48,7 @@ const CurrentTierCard: React.FC<CurrentTierCardProps> = ({ user }) => {
                             <div className={`h-3 rounded-full ${currentTier.color}`} style={{ width: `${Math.min(progressPercentage, 100)}%` }}></div>
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
-                            You're <span className="font-bold">{tierProgress.goal - user.points}</span> points away from {tierProgress.next} tier.
+                            You're <span className="font-bold">{(tierProgress.goal - user.points).toLocaleString()}</span> points away from {tierProgress.next} tier.
                         </p>
                     </>
                  ) : (

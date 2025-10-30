@@ -1,15 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { orders } from '../data/mockData';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import OrderCard from '../components/OrderCard';
 import { DocumentTextIcon } from '../assets/icons';
+import { useNotification } from '../contexts/NotificationContext';
+import { Order, OrderStatus } from '../types';
 
 const OrdersPage: React.FC = () => {
     const currentUser = useCurrentUser();
-    const userOrders = orders.filter(order => order.userId === currentUser?.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const { addNotification } = useNotification();
+    
+    const initialUserOrders = orders
+        .filter(order => order.userId === currentUser?.id)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+    const [userOrders, setUserOrders] = useState<Order[]>(initialUserOrders);
 
-    const currentOrders = userOrders.filter(o => o.status !== 'Completed' && o.status !== 'Cancelled');
-    const pastOrders = userOrders.filter(o => o.status === 'Completed' || o.status === 'Cancelled');
+    const handleCancelOrder = (orderId: string) => {
+        setUserOrders(prevOrders => 
+            prevOrders.map(order => 
+                order.id === orderId ? { ...order, status: OrderStatus.Cancelled } : order
+            )
+        );
+        addNotification(`Order #${orderId.slice(-5)} has been cancelled.`, 'success');
+    };
+
+    const currentOrders = userOrders.filter(o => o.status === OrderStatus.InProgress || o.status === OrderStatus.ReadyForPickup);
+    const pastOrders = userOrders.filter(o => o.status === OrderStatus.Completed || o.status === OrderStatus.Cancelled);
 
     return (
         <div>
@@ -27,7 +44,7 @@ const OrdersPage: React.FC = () => {
                         <div>
                             <h2 className="text-2xl font-semibold mb-4">Current Orders</h2>
                             <div className="space-y-4">
-                                {currentOrders.map(order => <OrderCard key={order.id} order={order} />)}
+                                {currentOrders.map(order => <OrderCard key={order.id} order={order} onCancelOrder={handleCancelOrder} />)}
                             </div>
                         </div>
                     )}
@@ -36,7 +53,7 @@ const OrdersPage: React.FC = () => {
                         <div>
                             <h2 className="text-2xl font-semibold mb-4">Past Orders</h2>
                              <div className="space-y-4">
-                                {pastOrders.map(order => <OrderCard key={order.id} order={order} />)}
+                                {pastOrders.map(order => <OrderCard key={order.id} order={order} onCancelOrder={handleCancelOrder} />)}
                             </div>
                         </div>
                     )}

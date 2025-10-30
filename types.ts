@@ -1,4 +1,5 @@
 
+
 export enum UserTier {
     Bronze = 'Bronze',
     Silver = 'Silver',
@@ -112,6 +113,8 @@ export interface Reward {
     pointsRequired: number;
     tierRequired: UserTier;
     imageUrl: string;
+    discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
+    discountValue: number;
 }
 
 export interface PointTransaction {
@@ -137,6 +140,8 @@ export interface Voucher {
     description: string;
     expiryDate: string;
     used: boolean;
+    discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
+    discountValue: number;
 }
 
 export interface Review {

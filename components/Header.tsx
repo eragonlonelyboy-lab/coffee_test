@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useTheme } from '../App';
-import { CoffeeCupIcon, UserIcon, SunIcon, MoonIcon, ShoppingCartIcon, Bars3Icon, XMarkIcon } from '../assets/icons';
+import { CoffeeCupIcon, UserIcon, SunIcon, MoonIcon, ShoppingCartIcon, Bars3Icon, XMarkIcon, WalletIcon } from '../assets/icons';
 
 const Header: React.FC = () => {
     const { currentUser } = useAuth();
@@ -105,6 +105,12 @@ const Header: React.FC = () => {
                             >
                                 {theme === 'dark' ? <SunIcon className="h-6 w-6" /> : <MoonIcon className="h-6 w-6" />}
                             </button>
+                            {currentUser && (
+                                <Link to="/wallet" className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                                    <WalletIcon className="h-6 w-6 text-brand-500" />
+                                    <span className="hidden sm:inline font-semibold">${currentUser.walletBalance.toFixed(2)}</span>
+                                </Link>
+                            )}
                             <Link to="/cart" aria-label="View shopping cart" className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
                                 <ShoppingCartIcon className="h-6 w-6" />
                                 {cartItemCount > 0 && (

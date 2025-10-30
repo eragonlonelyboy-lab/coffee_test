@@ -1,21 +1,117 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { MinusIcon, PlusIcon, TrashIcon, ShoppingCartIcon } from '../assets/icons';
 import { useNotification } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
+import { orders as mockOrders } from '../data/mockData';
+import { Order, OrderStatus } from '../types';
+import { calculatePoints } from '../utils/tierUtils';
 
 const CartPage: React.FC = () => {
     const { cart, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
     const navigate = useNavigate();
     const { addNotification } = useNotification();
+    const { currentUser, updateProfile, addWalletTransaction, addPointTransaction, vouchers, useVoucher } = useAuth();
+    const [selectedVoucherId, setSelectedVoucherId] = useState<string>('');
+
+    const availableVouchers = useMemo(() => {
+        if (!currentUser) return [];
+        return vouchers.filter(v => 
+            v.userId === currentUser.id && 
+            !v.used && 
+            new Date(v.expiryDate) > new Date()
+        );
+    }, [vouchers, currentUser]);
+
+    const { discount, finalTotal } = useMemo(() => {
+        const selectedVoucher = availableVouchers.find(v => v.id === selectedVoucherId);
+        let calculatedDiscount = 0;
+        if (selectedVoucher) {
+            if (selectedVoucher.discountType === 'PERCENTAGE') {
+                calculatedDiscount = cartTotal * (selectedVoucher.discountValue / 100);
+            } else { // FIXED_AMOUNT
+                calculatedDiscount = selectedVoucher.discountValue;
+            }
+        }
+        // Ensure discount doesn't exceed total
+        calculatedDiscount = Math.min(calculatedDiscount, cartTotal);
+        const calculatedFinalTotal = cartTotal - calculatedDiscount;
+        return { discount: calculatedDiscount, finalTotal: calculatedFinalTotal };
+    }, [selectedVoucherId, cartTotal, availableVouchers]);
+
+    const createOrder = (): Order | null => {
+        if (!currentUser) {
+            addNotification("You must be logged in to place an order.", "error");
+            navigate('/login');
+            return null;
+        }
+        const newOrderId = `ord-${Date.now()}`;
+        
+        // Award points on the final amount paid
+        const pointsEarned = calculatePoints(finalTotal, currentUser.tier);
+        updateProfile({ points: currentUser.points + pointsEarned });
+        addPointTransaction({
+            description: `Order #${newOrderId.slice(-5)}`,
+            points: pointsEarned,
+        });
+
+        // Use selected voucher
+        if (selectedVoucherId) {
+            useVoucher(selectedVoucherId);
+        }
+
+        return {
+            id: newOrderId,
+            userId: currentUser.id,
+            outletId: 'o-1', // Mock outlet for simplicity
+            date: new Date().toISOString(),
+            items: cart.map(cartItem => ({
+                id: `oi-${cartItem.id}-${Math.random()}`,
+                drink: cartItem.drink,
+                quantity: cartItem.quantity,
+                unitPrice: cartItem.unitPrice,
+                customizations: cartItem.customizations,
+            })),
+            total: finalTotal,
+            status: OrderStatus.InProgress,
+            preparationTime: Math.floor(Math.random() * 10) + 5,
+        };
+    };
+
+    const handleWalletCheckout = () => {
+        if (!currentUser) return;
+
+        if (currentUser.walletBalance >= finalTotal) {
+            const newOrder = createOrder();
+            if (!newOrder) return;
+
+            mockOrders.unshift(newOrder);
+
+            const newBalance = currentUser.walletBalance - finalTotal;
+            updateProfile({ walletBalance: newBalance });
+
+            addWalletTransaction({
+                description: `Payment for Order #${newOrder.id.slice(-5)}`,
+                amount: -finalTotal,
+            });
+
+            addNotification('Paid successfully with your wallet!', 'success');
+            clearCart();
+            navigate(`/order-confirmation/${newOrder.id}`);
+        } else {
+            addNotification('Insufficient wallet balance for the final amount.', 'error');
+        }
+    };
 
     const handleCheckout = () => {
-        // In a real app, this would create an order and redirect to a payment page.
-        // Here, we'll simulate order creation and redirect to a confirmation page.
-        const newOrderId = `ord-${Date.now()}`;
+        const newOrder = createOrder();
+        if (!newOrder) return;
+
+        mockOrders.unshift(newOrder);
         addNotification('Order placed successfully!', 'success');
         clearCart();
-        navigate(`/order-confirmation/${newOrderId}`);
+        navigate(`/order-confirmation/${newOrder.id}`);
     };
 
     return (
@@ -62,20 +158,53 @@ const CartPage: React.FC = () => {
                                 <span>Subtotal</span>
                                 <span>${cartTotal.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between text-gray-600 dark:text-gray-300">
-                                <span>Taxes & Fees</span>
-                                <span>Calculated at checkout</span>
+                            
+                            {/* Voucher Selection */}
+                            <div className="space-y-2">
+                                <label htmlFor="voucher" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Apply Voucher</label>
+                                <select 
+                                    id="voucher" 
+                                    value={selectedVoucherId}
+                                    onChange={(e) => setSelectedVoucherId(e.target.value)}
+                                    className="block w-full text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 focus:ring-brand-500 focus:border-brand-500"
+                                    disabled={availableVouchers.length === 0}
+                                >
+                                    <option value="">{availableVouchers.length > 0 ? 'Select a voucher' : 'No available vouchers'}</option>
+                                    {availableVouchers.map(v => (
+                                        <option key={v.id} value={v.id}>
+                                            {v.title}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
+
+                             {discount > 0 && (
+                                <div className="flex justify-between text-green-600 dark:text-green-400">
+                                    <span>Discount</span>
+                                    <span>-${discount.toFixed(2)}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between font-bold text-lg border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
                                 <span>Total</span>
-                                <span>${cartTotal.toFixed(2)}</span>
+                                <span>${finalTotal.toFixed(2)}</span>
                             </div>
-                            <button 
-                                onClick={handleCheckout}
-                                className="w-full bg-brand-500 text-white font-semibold py-3 rounded-md hover:bg-brand-600 transition-transform hover:scale-105"
-                            >
-                                Proceed to Checkout
-                            </button>
+                            
+                            <div className="space-y-2">
+                                <button 
+                                    onClick={handleWalletCheckout}
+                                    disabled={!currentUser}
+                                    className="w-full bg-green-600 text-white font-semibold py-3 rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                >
+                                    Pay with Wallet (${currentUser?.walletBalance.toFixed(2)})
+                                </button>
+                                <button 
+                                    onClick={handleCheckout}
+                                    className="w-full bg-brand-500 text-white font-semibold py-3 rounded-md hover:bg-brand-600 transition-colors"
+                                >
+                                    Proceed to Checkout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

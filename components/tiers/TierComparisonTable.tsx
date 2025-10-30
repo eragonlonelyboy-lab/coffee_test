@@ -1,6 +1,7 @@
 import React from 'react';
 import { UserTier } from '../../types';
 import { CheckIcon, XMarkIcon } from '../../assets/icons';
+import { tierPointMultipliers } from '../../utils/tierUtils';
 
 const tiers = [
   { name: UserTier.Bronze, points: 0, color: 'text-yellow-600 dark:text-yellow-500' },
@@ -11,7 +12,13 @@ const tiers = [
 ];
 
 const benefits = [
-    { name: 'Base Point Earning', tiers: ['1x', '1.1x', '1.2x', '1.5x', '2x'] },
+    { name: 'Base Point Earning', tiers: [
+        `${tierPointMultipliers.Bronze}x`,
+        `${tierPointMultipliers.Silver}x`,
+        `${tierPointMultipliers.Gold}x`,
+        `${tierPointMultipliers.Platinum}x`,
+        `${tierPointMultipliers.Elite}x`,
+    ] },
     { name: 'Member-Only Offers', tiers: [true, true, true, true, true] },
     { name: 'Free Birthday Drink', tiers: [false, true, true, true, true] },
     { name: 'Free Monthly Pastry', tiers: [false, false, true, true, true] },

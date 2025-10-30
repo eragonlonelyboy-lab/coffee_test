@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
-import { useCurrentUser } from '../hooks/useCurrentUser';
-import { walletTransactions } from '../data/mockData';
+import { useAuth } from '../contexts/AuthContext';
 import TopUpModal from '../components/wallet/TopUpModal';
+import WithdrawModal from '../components/wallet/WithdrawModal';
 import { useNotification } from '../contexts/NotificationContext';
 
 const WalletPage: React.FC = () => {
-    const currentUser = useCurrentUser();
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const { currentUser, updateProfile, addWalletTransaction, walletTransactions } = useAuth();
+    const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const { addNotification } = useNotification();
     
-    // This state would normally be managed in a context or fetched, 
-    // but for this demo, we'll manage it locally on this page.
-    const [balance, setBalance] = useState(currentUser?.walletBalance || 0);
-
     if (!currentUser) return <p>Loading...</p>;
 
     const userTransactions = walletTransactions
@@ -20,9 +17,29 @@ const WalletPage: React.FC = () => {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         
     const handleTopUp = (amount: number) => {
-        setBalance(prev => prev + amount);
+        const newBalance = currentUser.walletBalance + amount;
+        updateProfile({ walletBalance: newBalance });
+        addWalletTransaction({
+            description: 'Wallet Top-Up',
+            amount: amount,
+        });
         addNotification(`$${amount.toFixed(2)} successfully added to your wallet!`, 'success');
-        setIsModalOpen(false);
+        setIsTopUpModalOpen(false);
+    };
+
+    const handleWithdraw = (amount: number) => {
+        if (amount > currentUser.walletBalance) {
+            addNotification('Withdrawal amount exceeds your current balance.', 'error');
+            return;
+        }
+        const newBalance = currentUser.walletBalance - amount;
+        updateProfile({ walletBalance: newBalance });
+        addWalletTransaction({
+            description: 'Wallet Withdrawal',
+            amount: -amount,
+        });
+        addNotification(`$${amount.toFixed(2)} successfully withdrawn from your wallet!`, 'success');
+        setIsWithdrawModalOpen(false);
     };
 
     return (
@@ -32,17 +49,25 @@ const WalletPage: React.FC = () => {
                 <p className="text-gray-500 dark:text-gray-400">Manage your balance and view your transaction history.</p>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex justify-between items-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div>
                     <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400">Current Balance</h2>
-                    <p className="text-4xl font-bold">${balance.toFixed(2)}</p>
+                    <p className="text-4xl font-bold">${currentUser.walletBalance.toFixed(2)}</p>
                 </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-brand-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-brand-700 transition-colors"
-                >
-                    Top-Up Wallet
-                </button>
+                <div className="flex items-center gap-2 self-stretch sm:self-auto">
+                    <button
+                        onClick={() => setIsWithdrawModalOpen(true)}
+                        className="w-full sm:w-auto bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-3 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    >
+                        Withdraw
+                    </button>
+                    <button
+                        onClick={() => setIsTopUpModalOpen(true)}
+                        className="w-full sm:w-auto bg-brand-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-brand-700 transition-colors"
+                    >
+                        Top-Up
+                    </button>
+                </div>
             </div>
             
              <div>
@@ -67,9 +92,15 @@ const WalletPage: React.FC = () => {
             </div>
 
             <TopUpModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={isTopUpModalOpen}
+                onClose={() => setIsTopUpModalOpen(false)}
                 onTopUp={handleTopUp}
+            />
+            <WithdrawModal
+                isOpen={isWithdrawModalOpen}
+                onClose={() => setIsWithdrawModalOpen(false)}
+                onWithdraw={handleWithdraw}
+                currentBalance={currentUser.walletBalance}
             />
         </div>
     );

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { rewards, pointTransactions } from '../data/mockData';
-import { useCurrentUser } from '../hooks/useCurrentUser';
+import { rewards } from '../data/mockData';
 import { Reward } from '../types';
 
 import PointsSummary from '../components/rewards/PointsSummary';
@@ -8,10 +7,11 @@ import RewardCard from '../components/rewards/RewardCard';
 import PointsHistory from '../components/rewards/PointsHistory';
 import RedeemModal from '../components/rewards/RedeemModal';
 import { useNotification } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 
 
 const RewardsPage: React.FC = () => {
-    const currentUser = useCurrentUser();
+    const { currentUser, updateProfile, pointTransactions, addPointTransaction, addVoucher } = useAuth();
     const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
     const { addNotification } = useNotification();
 
@@ -28,10 +28,29 @@ const RewardsPage: React.FC = () => {
     };
     
     const confirmRedemption = () => {
-        if (selectedReward) {
-            // Here you would typically call an API to update user points.
-            // For now, we just show a notification.
-            addNotification(`Successfully redeemed "${selectedReward.title}"!`, 'success');
+        if (selectedReward && currentUser) {
+            // 1. Deduct points
+            const newPoints = currentUser.points - selectedReward.pointsRequired;
+            updateProfile({ points: newPoints });
+
+            // 2. Log transaction
+            addPointTransaction({
+                description: `Redeemed: ${selectedReward.title}`,
+                points: -selectedReward.pointsRequired,
+            });
+
+            // 3. Create a voucher
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 30); // Voucher expires in 30 days
+            addVoucher({
+                title: selectedReward.title,
+                description: selectedReward.description,
+                expiryDate: expiryDate.toISOString(),
+                discountType: selectedReward.discountType,
+                discountValue: selectedReward.discountValue,
+            });
+
+            addNotification(`Successfully redeemed "${selectedReward.title}"! Check your vouchers.`, 'success');
             setSelectedReward(null);
         }
     };

@@ -4,10 +4,15 @@ import { drinks as allDrinks } from '../data/mockData';
 import DrinkCard from '../components/DrinkCard';
 import CustomizationModal from '../components/CustomizationModal';
 import { MagnifyingGlassIcon } from '../assets/icons';
+import { useCart } from '../contexts/CartContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 const MenuPage: React.FC = () => {
   const [selectedDrink, setSelectedDrink] = useState<Drink | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [modalQuantity, setModalQuantity] = useState(1);
+  const { addToCart } = useCart();
+  const { addNotification } = useNotification();
 
   const allCategories = useMemo(() => ['All', ...Array.from(new Set(allDrinks.map(d => d.category)))], []);
   const [selectedCategory, setSelectedCategory] = useState(allCategories[0]);
@@ -21,8 +26,14 @@ const MenuPage: React.FC = () => {
     });
   }, [searchQuery, selectedCategory]);
 
-  const handleSelectDrink = (drink: Drink) => {
-    setSelectedDrink(drink);
+  const handleSelectDrink = (drink: Drink, quantity: number) => {
+    if (drink.customizations && drink.customizations.length > 0) {
+        setModalQuantity(quantity);
+        setSelectedDrink(drink);
+    } else {
+        addToCart(drink, quantity, {});
+        addNotification(`${quantity}x ${drink.name} added to cart!`, 'success');
+    }
   };
 
   const handleCloseModal = () => {
@@ -90,7 +101,7 @@ const MenuPage: React.FC = () => {
         {filteredDrinks.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredDrinks.map(drink => (
-              <DrinkCard key={drink.id} drink={drink} onSelect={() => handleSelectDrink(drink)} />
+              <DrinkCard key={drink.id} drink={drink} onSelect={handleSelectDrink} />
             ))}
           </div>
         ) : (
@@ -106,6 +117,7 @@ const MenuPage: React.FC = () => {
           drink={selectedDrink}
           isOpen={!!selectedDrink}
           onClose={handleCloseModal}
+          initialQuantity={modalQuantity}
         />
       )}
     </div>

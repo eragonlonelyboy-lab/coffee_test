@@ -91,10 +91,10 @@ export const missions: Mission[] = [
 ];
 
 export const rewards: Reward[] = [
-    { id: 'r-1', title: 'Free Drip Coffee', description: 'Any size of our classic house blend.', pointsRequired: 250, tierRequired: UserTier.Bronze, imageUrl: 'https://picsum.photos/seed/reward-drip/400/300' },
-    { id: 'r-2', title: 'Any Pastry', description: 'Choose from our daily selection of fresh pastries.', pointsRequired: 400, tierRequired: UserTier.Bronze, imageUrl: 'https://picsum.photos/seed/reward-pastry/400/300' },
-    { id: 'r-3', title: 'Any Handcrafted Drink', description: 'Your choice of any specialty drink, any size.', pointsRequired: 750, tierRequired: UserTier.Silver, imageUrl: 'https://picsum.photos/seed/reward-specialty/400/300' },
-    { id: 'r-4', title: 'LoyalBrew Tumbler', description: 'A stylish, reusable tumbler for your daily brew.', pointsRequired: 2500, tierRequired: UserTier.Gold, imageUrl: 'https://picsum.photos/seed/reward-tumbler/400/300' },
+    { id: 'r-1', title: 'Free Drip Coffee', description: 'Any size of our classic house blend.', pointsRequired: 250, tierRequired: UserTier.Bronze, imageUrl: 'https://picsum.photos/seed/reward-drip/400/300', discountType: 'FIXED_AMOUNT', discountValue: 3.50 },
+    { id: 'r-2', title: '$5 Off Your Order', description: 'Enjoy $5 off your total purchase.', pointsRequired: 400, tierRequired: UserTier.Bronze, imageUrl: 'https://picsum.photos/seed/reward-pastry/400/300', discountType: 'FIXED_AMOUNT', discountValue: 5.00 },
+    { id: 'r-3', title: 'Any Handcrafted Drink', description: 'Your choice of any specialty drink, any size.', pointsRequired: 750, tierRequired: UserTier.Silver, imageUrl: 'https://picsum.photos/seed/reward-specialty/400/300', discountType: 'FIXED_AMOUNT', discountValue: 7.00 },
+    { id: 'r-4', title: '25% Off Merchandise', description: 'A stylish, reusable tumbler for your daily brew.', pointsRequired: 1500, tierRequired: UserTier.Gold, imageUrl: 'https://picsum.photos/seed/reward-tumbler/400/300', discountType: 'PERCENTAGE', discountValue: 25 },
 ];
 
 export const pointTransactions: PointTransaction[] = [
@@ -110,9 +110,9 @@ export const walletTransactions: WalletTransaction[] = [
 ];
 
 export const vouchers: Voucher[] = [
-    { id: 'v-1', userId: 'user-1', title: '50% Off Your Next Drink', description: 'Valid on any handcrafted beverage.', expiryDate: new Date(Date.now() + 86400000 * 7).toISOString(), used: false },
-    { id: 'v-2', userId: 'user-1', title: '$1 Off Any Food Item', description: 'Enjoy a discount on our tasty treats.', expiryDate: new Date(Date.now() + 86400000 * 14).toISOString(), used: false },
-    { id: 'v-3', userId: 'user-1', title: 'Free Birthday Drink', description: 'Happy Birthday from LoyalBrew!', expiryDate: new Date(Date.now() - 86400000 * 2).toISOString(), used: true },
+    { id: 'v-1', userId: 'user-1', title: '50% Off Your Next Drink', description: 'Valid on any handcrafted beverage.', expiryDate: new Date(Date.now() + 86400000 * 7).toISOString(), used: false, discountType: 'PERCENTAGE', discountValue: 50 },
+    { id: 'v-2', userId: 'user-1', title: '$1 Off Any Food Item', description: 'Enjoy a discount on our tasty treats.', expiryDate: new Date(Date.now() + 86400000 * 14).toISOString(), used: false, discountType: 'FIXED_AMOUNT', discountValue: 1 },
+    { id: 'v-3', userId: 'user-1', title: 'Free Birthday Drink', description: 'Happy Birthday from LoyalBrew!', expiryDate: new Date(Date.now() - 86400000 * 2).toISOString(), used: true, discountType: 'FIXED_AMOUNT', discountValue: 7.00 },
 ];
 
 export const reviews: Review[] = [

@@ -8,10 +8,11 @@ interface CustomizationModalProps {
   drink: Drink;
   isOpen: boolean;
   onClose: () => void;
+  initialQuantity: number;
 }
 
-const CustomizationModal: React.FC<CustomizationModalProps> = ({ drink, isOpen, onClose }) => {
-  const [quantity, setQuantity] = useState(1);
+const CustomizationModal: React.FC<CustomizationModalProps> = ({ drink, isOpen, onClose, initialQuantity }) => {
+  const [quantity, setQuantity] = useState(initialQuantity || 1);
   const { addToCart } = useCart();
   const { addNotification } = useNotification();
 
@@ -30,10 +31,10 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ drink, isOpen, 
   useEffect(() => {
     if (isOpen) {
         // Reset state when modal opens for a new drink
-        setQuantity(1);
+        setQuantity(initialQuantity || 1);
         setSelectedCustomizations(getDefaultCustomizations());
     }
-  }, [drink, isOpen]);
+  }, [drink, isOpen, initialQuantity]);
 
   if (!isOpen) return null;
 

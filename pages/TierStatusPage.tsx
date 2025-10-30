@@ -2,6 +2,7 @@ import React from 'react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import CurrentTierCard from '../components/tiers/CurrentTierCard';
 import TierComparisonTable from '../components/tiers/TierComparisonTable';
+import PointsCalculator from '../components/tiers/PointsCalculator';
 
 const TierStatusPage: React.FC = () => {
     const currentUser = useCurrentUser();
@@ -18,6 +19,8 @@ const TierStatusPage: React.FC = () => {
             </div>
 
             <CurrentTierCard user={currentUser} />
+
+            <PointsCalculator user={currentUser} />
 
             <TierComparisonTable />
         </div>
