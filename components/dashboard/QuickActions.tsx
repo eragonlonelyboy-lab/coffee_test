@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CoffeeCupIcon, GiftIcon, ShoppingCartIcon, DocumentTextIcon } from '../../assets/icons';
+import { GiftIcon, ShoppingCartIcon, DocumentTextIcon, UserPlusIcon } from '../../assets/icons';
 
 const actions = [
   { name: 'Order Now', href: '/menu', icon: ShoppingCartIcon, color: 'bg-brand-500 hover:bg-brand-600' },
   { name: 'My Rewards', href: '/rewards', icon: GiftIcon, color: 'bg-green-500 hover:bg-green-600' },
   { name: 'My Orders', href: '/orders', icon: DocumentTextIcon, color: 'bg-blue-500 hover:bg-blue-600' },
-  { name: 'Locations', href: '/locations', icon: CoffeeCupIcon, color: 'bg-yellow-500 hover:bg-yellow-600' },
+  { name: 'Refer Friends', href: '/referrals', icon: UserPlusIcon, color: 'bg-teal-500 hover:bg-teal-600' },
 ];
 
 const QuickActions: React.FC = () => {

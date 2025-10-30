@@ -1,5 +1,51 @@
-import React from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { HashRouter as Router, Route, Routes } from 'react-router-dom';
+
+// --- Theme Management ---
+type Theme = 'light' | 'dark';
+
+interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<Theme>(() => {
+    const savedTheme = window.localStorage.getItem('loyalbrew-theme') as Theme | null;
+    if (savedTheme) return savedTheme;
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+    window.localStorage.setItem('loyalbrew-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
+  const value = { theme, toggleTheme };
+
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+export const useTheme = (): ThemeContextType => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+// --- End Theme Management ---
 
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
@@ -29,7 +75,7 @@ import ReferralsPage from './pages/ReferralsPage';
 import ReviewsPage from './pages/ReviewsPage';
 
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
     return (
         <AuthProvider>
             <CartProvider>
@@ -67,6 +113,15 @@ const App: React.FC = () => {
                 </NotificationProvider>
             </CartProvider>
         </AuthProvider>
+    );
+};
+
+
+const App: React.FC = () => {
+    return (
+        <ThemeProvider>
+            <AppContent />
+        </ThemeProvider>
     );
 };
 

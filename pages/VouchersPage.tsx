@@ -2,6 +2,7 @@ import React from 'react';
 import { vouchers } from '../data/mockData';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { GiftIcon } from '../assets/icons';
+import { Voucher } from '../types';
 
 const VouchersPage: React.FC = () => {
     const currentUser = useCurrentUser();
@@ -10,7 +11,8 @@ const VouchersPage: React.FC = () => {
     const availableVouchers = userVouchers.filter(v => !v.used);
     const usedVouchers = userVouchers.filter(v => v.used);
 
-    const VoucherCard = ({ voucher }: { voucher: typeof userVouchers[0] }) => (
+    // FIX: Changed component typing to React.FC<{ voucher: Voucher }> to correctly handle the 'key' prop in lists.
+    const VoucherCard: React.FC<{ voucher: Voucher }> = ({ voucher }) => (
         <div className={`p-6 rounded-lg shadow-md relative overflow-hidden ${
             voucher.used ? 'bg-gray-100 dark:bg-gray-800 opacity-60' : 'bg-gradient-to-br from-brand-50 to-yellow-50 dark:from-brand-900/50 dark:to-yellow-900/30'
         }`}>

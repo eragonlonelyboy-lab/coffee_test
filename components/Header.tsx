@@ -2,11 +2,13 @@ import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
-import { CoffeeCupIcon, UserIcon } from '../assets/icons';
+import { useTheme } from '../App';
+import { CoffeeCupIcon, UserIcon, SunIcon, MoonIcon } from '../assets/icons';
 
 const Header: React.FC = () => {
     const { currentUser } = useAuth();
     const { cart } = useCart();
+    const { theme, toggleTheme } = useTheme();
 
     const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
         `text-sm font-medium transition-colors ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`;
@@ -28,6 +30,17 @@ const Header: React.FC = () => {
                         <NavLink to="/rewards" className={navLinkClasses}>Rewards</NavLink>
                     </nav>
                     <div className="flex items-center gap-4">
+                         <button
+                            onClick={toggleTheme}
+                            aria-label="Toggle theme"
+                            className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 dark:focus:ring-offset-gray-900"
+                        >
+                            {theme === 'dark' ? (
+                                <SunIcon className="h-6 w-6" />
+                            ) : (
+                                <MoonIcon className="h-6 w-6" />
+                            )}
+                        </button>
                         <Link to="/cart" aria-label="View shopping cart" className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                             {cartItemCount > 0 && (

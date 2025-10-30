@@ -6,7 +6,7 @@ interface CurrentTierCardProps {
     user: User;
 }
 
-const tierDetails = {
+export const tierDetails = {
   [UserTier.Bronze]: { color: 'bg-yellow-600', benefits: ['1x Points per $1', 'Member-only offers'] },
   [UserTier.Silver]: { color: 'bg-gray-400', benefits: ['1.1x Points per $1', 'Free Birthday Drink'] },
   [UserTier.Gold]: { color: 'bg-yellow-500', benefits: ['1.2x Points per $1', 'Free monthly pastry'] },
