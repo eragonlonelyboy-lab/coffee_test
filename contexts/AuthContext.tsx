@@ -3,7 +3,6 @@ import { User, Review, WalletTransaction, PointTransaction, Voucher } from '../t
 import { 
     users as mockUsers, 
     reviews as mockReviews, 
-    drinks as mockDrinks, 
     walletTransactions as mockWalletTransactions,
     pointTransactions as mockPointTransactions,
     vouchers as mockVouchers
@@ -18,7 +17,7 @@ interface AuthContextType {
   
   reviews: Review[];
   addReview: (review: Omit<Review, 'id' | 'userName' | 'userId' | 'date'>) => void;
-  editReview: (reviewId: string, updates: Partial<Pick<Review, 'rating' | 'comment' | 'tags'>>) => void;
+  editReview: (reviewId: string, updates: Partial<Pick<Review, 'rating' | 'comment'>>) => void;
   deleteReview: (reviewId: string) => void;
   
   walletTransactions: WalletTransaction[];
@@ -99,63 +98,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         date: new Date().toISOString()
     };
     
-    const updatedReviews = [newReview, ...reviews];
-    setReviews(updatedReviews);
+    setReviews(prev => [newReview, ...prev]);
     mockReviews.unshift(newReview);
-
-    recalculateDrinkRating(newReview.drinkId, updatedReviews);
   };
 
-  const editReview = (reviewId: string, updates: Partial<Pick<Review, 'rating' | 'comment' | 'tags'>>) => {
-    let drinkIdToUpdate: string | undefined;
-    const updatedReviews = reviews.map(r => {
-      if (r.id === reviewId) {
-        drinkIdToUpdate = r.drinkId;
-        return { ...r, ...updates, date: new Date().toISOString() };
-      }
-      return r;
-    });
+  const editReview = (reviewId: string, updates: Partial<Pick<Review, 'rating' | 'comment'>>) => {
+    const updatedReviews = reviews.map(r => 
+        r.id === reviewId ? { ...r, ...updates, date: new Date().toISOString() } : r
+    );
     setReviews(updatedReviews);
     
     const reviewInMock = mockReviews.find(r => r.id === reviewId);
     if (reviewInMock) {
         Object.assign(reviewInMock, updates, { date: new Date().toISOString() });
     }
-
-    if (drinkIdToUpdate) {
-        recalculateDrinkRating(drinkIdToUpdate, updatedReviews);
-    }
   };
 
   const deleteReview = (reviewId: string) => {
-    const reviewToDelete = reviews.find(r => r.id === reviewId);
-    if (!reviewToDelete) return;
-
-    const updatedReviews = reviews.filter(r => r.id !== reviewId);
-    setReviews(updatedReviews);
+    setReviews(prev => prev.filter(r => r.id !== reviewId));
 
     const indexInMock = mockReviews.findIndex(r => r.id === reviewId);
     if (indexInMock > -1) {
         mockReviews.splice(indexInMock, 1);
-    }
-
-    recalculateDrinkRating(reviewToDelete.drinkId, updatedReviews);
-  };
-
-  const recalculateDrinkRating = (drinkId: string, allReviews: Review[]) => {
-    const drinkToUpdate = mockDrinks.find(d => d.id === drinkId);
-    if (drinkToUpdate) {
-        const drinkReviews = allReviews.filter(r => r.drinkId === drinkId);
-        if (drinkReviews.length > 0) {
-            const totalRating = drinkReviews.reduce((sum, r) => sum + r.rating, 0);
-            const newAverage = totalRating / drinkReviews.length;
-            
-            drinkToUpdate.rating = parseFloat(newAverage.toFixed(1));
-            drinkToUpdate.reviewCount = drinkReviews.length;
-        } else {
-            drinkToUpdate.rating = 0;
-            drinkToUpdate.reviewCount = 0;
-        }
     }
   };
   

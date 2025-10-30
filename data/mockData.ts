@@ -62,7 +62,7 @@ export const orders: Order[] = [
     {
         id: 'ord-12345', userId: 'user-1', outletId: 'o-1', date: new Date(Date.now() - 86400000 * 2).toISOString(),
         items: [{ id: 'oi-1', drink: drinks[0], quantity: 1, unitPrice: 5.25, customizations: { 'c-1': 'o-3', 'c-2': 'o-5' } }],
-        total: 5.25, status: OrderStatus.Completed, preparationTime: 8
+        total: 5.25, status: OrderStatus.Completed, preparationTime: 8, reviewId: 'rev-1'
     },
     {
         id: 'ord-12346', userId: 'user-1', outletId: 'o-2', date: new Date(Date.now() - 86400000).toISOString(),
@@ -116,6 +116,5 @@ export const vouchers: Voucher[] = [
 ];
 
 export const reviews: Review[] = [
-    { id: 'rev-1', userId: 'user-1', drinkId: 'd-1', drinkName: 'Caramel Macchiato', userName: 'Alex Doe', rating: 5, comment: 'Absolutely perfect, my favorite morning treat!', date: new Date(Date.now() - 86400000 * 4).toISOString(), tags: ['Good taste', 'Fast service'] },
-    { id: 'rev-2', userId: 'user-2', drinkId: 'd-2', drinkName: 'Iced Vanilla Latte', userName: 'Jane Smith', rating: 5, comment: 'So refreshing and the vanilla is not too sweet. Delicious!', date: new Date(Date.now() - 86400000 * 3).toISOString(), tags: ['Good taste'] },
+    { id: 'rev-1', userId: 'user-1', orderId: 'ord-12345', storeId: 'o-1', userName: 'Alex Doe', rating: 5, comment: 'Absolutely perfect, my favorite morning treat!', date: new Date(Date.now() - 86400000 * 4).toISOString() },
 ];

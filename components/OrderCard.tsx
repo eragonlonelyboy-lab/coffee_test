@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Order, OrderStatus } from '../types';
 import { outlets } from '../data/mockData';
-import { XCircleIcon } from '../assets/icons';
+import { XCircleIcon, PencilIcon } from '../assets/icons';
 
 interface OrderCardProps {
     order: Order;
     onCancelOrder: (orderId: string) => void;
+    onLeaveReview?: (order: Order) => void;
 }
 
 const statusStyles: Record<OrderStatus, string> = {
@@ -15,7 +16,7 @@ const statusStyles: Record<OrderStatus, string> = {
     [OrderStatus.Cancelled]: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
 };
 
-const OrderCard: React.FC<OrderCardProps> = ({ order, onCancelOrder }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order, onCancelOrder, onLeaveReview }) => {
     const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
     const outlet = outlets.find(o => o.id === order.outletId);
 
@@ -52,6 +53,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onCancelOrder }) => {
         </div>
     );
 
+    const canReview = order.status === OrderStatus.Completed && !order.reviewId && onLeaveReview;
+
     return (
         <>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
@@ -80,14 +83,25 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onCancelOrder }) => {
                 <span className="font-semibold">Total</span>
                 <span className="font-semibold">${order.total.toFixed(2)}</span>
             </div>
-            {order.status === OrderStatus.InProgress && (
-                <div className="border-t border-gray-200 dark:border-gray-700 mt-3 pt-3">
-                     <button
-                        onClick={handleCancelClick}
-                        className="w-full text-center px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 rounded-md hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-                    >
-                        Cancel Order
-                    </button>
+            {(order.status === OrderStatus.InProgress || canReview) && (
+                 <div className="border-t border-gray-200 dark:border-gray-700 mt-3 pt-3">
+                     {order.status === OrderStatus.InProgress && (
+                         <button
+                            onClick={handleCancelClick}
+                            className="w-full text-center px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 rounded-md hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                        >
+                            Cancel Order
+                        </button>
+                     )}
+                     {canReview && (
+                          <button
+                            onClick={() => onLeaveReview(order)}
+                            className="w-full flex items-center justify-center gap-2 text-center px-4 py-2 text-sm font-semibold text-brand-600 bg-brand-50 dark:bg-brand-900/20 rounded-md hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors"
+                        >
+                            <PencilIcon className="w-4 h-4" />
+                            Leave a Review
+                        </button>
+                     )}
                 </div>
             )}
         </div>

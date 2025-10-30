@@ -1,7 +1,8 @@
 import React from 'react';
 import { Review } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
-import { StarIcon, PencilIcon, TrashIcon, UserIcon } from '../../assets/icons';
+import { StarIcon, TrashIcon, UserIcon } from '../../assets/icons';
+import { outlets } from '../../data/mockData';
 
 interface ReviewCardProps {
     review: Review;
@@ -10,6 +11,8 @@ interface ReviewCardProps {
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
     const { currentUser, deleteReview } = useAuth();
     const isOwner = currentUser?.id === review.userId;
+    
+    const outlet = outlets.find(o => o.id === review.storeId);
 
     const handleDelete = () => {
         if (window.confirm('Are you sure you want to delete this review?')) {
@@ -20,7 +23,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
     return (
         <div className="pt-4">
             <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
                     <UserIcon className="w-6 h-6 text-gray-500" />
                 </div>
                 <div className="flex-grow">
@@ -28,14 +31,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
                         <div>
                             <p className="font-semibold">{review.userName}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Reviewed: <span className="font-medium text-gray-600 dark:text-gray-300">{review.drinkName}</span>
+                                Reviewed: <span className="font-medium text-gray-600 dark:text-gray-300">{outlet?.name || 'Unknown Store'}</span>
                             </p>
                         </div>
                          {isOwner && (
                             <div className="flex gap-2">
-                                <button className="p-1 text-gray-400 hover:text-blue-500" disabled>
-                                    <PencilIcon className="w-5 h-5" />
-                                </button>
                                 <button onClick={handleDelete} className="p-1 text-gray-400 hover:text-red-500">
                                     <TrashIcon className="w-5 h-5" />
                                 </button>

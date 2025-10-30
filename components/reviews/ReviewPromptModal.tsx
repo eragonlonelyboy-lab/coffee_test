@@ -1,32 +1,28 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { OrderItem } from '../../types';
+import { Order } from '../../types';
 import StarRatingInput from './StarRatingInput';
 import { XMarkIcon } from '../../assets/icons';
+import { outlets } from '../../data/mockData';
 
 interface ReviewPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderItem: OrderItem;
+  onSubmit: (order: Order, rating: number, comment: string) => void;
+  order: Order;
 }
 
-const ReviewPromptModal: React.FC<ReviewPromptModalProps> = ({ isOpen, onClose, orderItem }) => {
+const ReviewPromptModal: React.FC<ReviewPromptModalProps> = ({ isOpen, onClose, onSubmit, order }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const { addReview } = useAuth();
+  
+  const outlet = outlets.find(o => o.id === order.outletId);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (rating > 0) {
-      addReview({
-        drinkId: orderItem.drink.id,
-        drinkName: orderItem.drink.name,
-        rating,
-        comment,
-      });
-      onClose();
+      onSubmit(order, rating, comment);
     }
   };
 
@@ -41,7 +37,9 @@ const ReviewPromptModal: React.FC<ReviewPromptModalProps> = ({ isOpen, onClose, 
         </div>
         <form onSubmit={handleSubmit}>
             <div className="p-6">
-                <p className="mb-4">How did you like the <span className="font-bold">{orderItem.drink.name}</span>?</p>
+                <p className="mb-4">
+                    How was your experience for order <span className="font-semibold">#{order.id.slice(-5)}</span> at <span className="font-semibold">{outlet?.name}</span>?
+                </p>
                 <div className="flex justify-center mb-4">
                      <StarRatingInput rating={rating} setRating={setRating} />
                 </div>

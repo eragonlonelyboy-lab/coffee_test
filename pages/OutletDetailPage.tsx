@@ -12,9 +12,7 @@ const OutletDetailPage: React.FC = () => {
         return <div className="text-center">Outlet not found.</div>;
     }
 
-    // Since reviews aren't tied to outlets in the mock data,
-    // we'll show all reviews as a placeholder.
-    const outletReviews = reviews;
+    const outletReviews = reviews.filter(r => r.storeId === outletId);
 
     return (
         <div className="space-y-8">

@@ -1,5 +1,3 @@
-
-
 export enum UserTier {
     Bronze = 'Bronze',
     Silver = 'Silver',
@@ -55,7 +53,6 @@ export interface Outlet {
     address: string;
     hours: string;
     imageUrl: string;
-    // Rating is now on Drink
 }
 
 export enum OrderStatus {
@@ -82,6 +79,7 @@ export interface Order {
     total: number;
     status: OrderStatus;
     preparationTime: number; // in minutes
+    reviewId?: string; // Link to a review if one exists
 }
 
 export interface Promotion {
@@ -147,12 +145,11 @@ export interface Voucher {
 export interface Review {
     id: string;
     userId: string;
-    drinkId: string;
-    drinkName: string;
+    orderId: string;
+    storeId: string;
     userName: string;
     rating: number; // 1-5
     comment: string;
-    tags?: string[];
     date: string; // ISO string
 }
 

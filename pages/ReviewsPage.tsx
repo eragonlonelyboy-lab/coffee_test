@@ -1,6 +1,5 @@
 import React from 'react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
-import TopDrinksLeaderboard from '../components/TopDrinksLeaderboard';
 import UserReviewHistory from '../components/reviews/UserReviewHistory';
 import TopOutletsLeaderboard from '../components/reviews/TopOutletsLeaderboard';
 
@@ -19,7 +18,6 @@ const ReviewsPage: React.FC = () => {
                      {currentUser && <UserReviewHistory userId={currentUser.id} />}
                 </div>
                 <div className="space-y-8">
-                    <TopDrinksLeaderboard />
                     <TopOutletsLeaderboard />
                 </div>
             </div>

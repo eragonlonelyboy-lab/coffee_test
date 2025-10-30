@@ -8,7 +8,9 @@ interface UserReviewHistoryProps {
 
 const UserReviewHistory: React.FC<UserReviewHistoryProps> = ({ userId }) => {
     const { reviews } = useAuth();
-    const userReviews = reviews.filter(r => r.userId === userId);
+    const userReviews = reviews
+        .filter(r => r.userId === userId)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
