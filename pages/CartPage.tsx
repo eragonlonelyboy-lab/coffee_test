@@ -4,15 +4,14 @@ import { useCart } from '../contexts/CartContext';
 import { MinusIcon, PlusIcon, TrashIcon, ShoppingCartIcon } from '../assets/icons';
 import { useNotification } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
-import { orders as mockOrders } from '../data/mockData';
-import { Order, OrderStatus } from '../types';
 import { calculatePoints } from '../utils/tierUtils';
 
 const CartPage: React.FC = () => {
-    const { cart, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
+    const { cart, removeFromCart, updateQuantity, cartTotal, clearCart, isLoading: isCartLoading } = useCart();
     const navigate = useNavigate();
     const { addNotification } = useNotification();
-    const { currentUser, updateProfile, addWalletTransaction, addPointTransaction, vouchers, useVoucher } = useAuth();
+    const { currentUser, token, updateProfile, addWalletTransaction, addPointTransaction, vouchers, useVoucher } = useAuth();
+    const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
     const [selectedVoucherId, setSelectedVoucherId] = useState<string>('');
 
     const availableVouchers = useMemo(() => {
@@ -34,85 +33,84 @@ const CartPage: React.FC = () => {
                 calculatedDiscount = selectedVoucher.discountValue;
             }
         }
-        // Ensure discount doesn't exceed total
         calculatedDiscount = Math.min(calculatedDiscount, cartTotal);
         const calculatedFinalTotal = cartTotal - calculatedDiscount;
         return { discount: calculatedDiscount, finalTotal: calculatedFinalTotal };
     }, [selectedVoucherId, cartTotal, availableVouchers]);
 
-    const createOrder = (): Order | null => {
-        if (!currentUser) {
+    const handleCheckout = async () => {
+        if (!currentUser || !token) {
             addNotification("You must be logged in to place an order.", "error");
             navigate('/login');
-            return null;
-        }
-        const newOrderId = `ord-${Date.now()}`;
-        
-        // Award points on the final amount paid
-        const pointsEarned = calculatePoints(finalTotal, currentUser.tier);
-        updateProfile({ points: currentUser.points + pointsEarned });
-        addPointTransaction({
-            description: `Order #${newOrderId.slice(-5)}`,
-            points: pointsEarned,
-        });
-
-        // Use selected voucher
-        if (selectedVoucherId) {
-            useVoucher(selectedVoucherId);
+            return;
         }
 
-        return {
-            id: newOrderId,
-            userId: currentUser.id,
-            outletId: 'o-1', // Mock outlet for simplicity
-            date: new Date().toISOString(),
-            items: cart.map(cartItem => ({
-                id: `oi-${cartItem.id}-${Math.random()}`,
-                drink: cartItem.drink,
-                quantity: cartItem.quantity,
-                unitPrice: cartItem.unitPrice,
-                customizations: cartItem.customizations,
-            })),
-            total: finalTotal,
-            status: OrderStatus.InProgress,
-            preparationTime: Math.floor(Math.random() * 10) + 5,
-        };
-    };
+        setIsCheckoutLoading(true);
+        try {
+            const items = cart.map(item => ({
+                menuItemId: item.menuItemId,
+                quantity: item.quantity,
+            }));
 
-    const handleWalletCheckout = () => {
-        if (!currentUser) return;
-
-        if (currentUser.walletBalance >= finalTotal) {
-            const newOrder = createOrder();
-            if (!newOrder) return;
-
-            mockOrders.unshift(newOrder);
-
-            const newBalance = currentUser.walletBalance - finalTotal;
-            updateProfile({ walletBalance: newBalance });
-
-            addWalletTransaction({
-                description: `Payment for Order #${newOrder.id.slice(-5)}`,
-                amount: -finalTotal,
+            const response = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    storeId: 'store-1', // Mock store for simplicity
+                    deliveryType: 'PICKUP',
+                    items,
+                })
             });
 
-            addNotification('Paid successfully with your wallet!', 'success');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create order.');
+            }
+
+            const { order: newOrder } = await response.json();
+
+            // The backend should ideally handle points/wallet in a transaction,
+            // but we follow the existing frontend-first logic for now.
+            const pointsEarned = calculatePoints(finalTotal, currentUser.tier);
+            updateProfile({ points: currentUser.points + pointsEarned });
+            addPointTransaction({
+                description: `Order #${newOrder.id.slice(-5)}`,
+                points: pointsEarned,
+            });
+
+            if (selectedVoucherId) useVoucher(selectedVoucherId);
+
+            addNotification('Order placed successfully!', 'success');
             clearCart();
             navigate(`/order-confirmation/${newOrder.id}`);
-        } else {
-            addNotification('Insufficient wallet balance for the final amount.', 'error');
+
+        } catch (err: any) {
+            addNotification(err.message, 'error');
+        } finally {
+            setIsCheckoutLoading(false);
         }
     };
 
-    const handleCheckout = () => {
-        const newOrder = createOrder();
-        if (!newOrder) return;
-
-        mockOrders.unshift(newOrder);
-        addNotification('Order placed successfully!', 'success');
-        clearCart();
-        navigate(`/order-confirmation/${newOrder.id}`);
+     const handleWalletCheckout = async () => {
+        if (!currentUser || finalTotal > currentUser.walletBalance) {
+            addNotification('Insufficient wallet balance.', 'error');
+            return;
+        }
+        
+        await handleCheckout(); // The main checkout logic already handles order creation.
+        
+        // If order creation was successful (indicated by not throwing an error), deduct from wallet.
+        // This is not transactional and is a limitation of the current design.
+        const newBalance = currentUser.walletBalance - finalTotal;
+        updateProfile({ walletBalance: newBalance });
+        addWalletTransaction({
+            description: `Payment for Order`, // We don't have the ID here, a small trade-off.
+            amount: -finalTotal,
+        });
+        addNotification('Paid successfully with your wallet!', 'success');
     };
+
+    const isLoading = isCartLoading || isCheckoutLoading;
 
     return (
         <div>
@@ -128,13 +126,13 @@ const CartPage: React.FC = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12">
-                    <div className="lg:col-span-2 space-y-4 pb-32 lg:pb-0">
+                    <div className={`lg:col-span-2 space-y-4 pb-32 lg:pb-0 transition-opacity ${isLoading ? 'opacity-50' : ''}`}>
                        {cart.map(item => (
                            <div key={item.id} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                               <img src={item.drink.imageUrls[0]} alt={item.drink.name} className="w-20 h-20 sm:w-24 sm:h-24 rounded-md object-cover"/>
+                               <img src={item.menuItem.imageUrls[0]} alt={item.menuItem.name} className="w-20 h-20 sm:w-24 sm:h-24 rounded-md object-cover"/>
                                <div className="flex-grow">
-                                   <h3 className="font-semibold text-lg">{item.drink.name}</h3>
-                                   <p className="text-sm text-gray-500 dark:text-gray-400">${item.unitPrice.toFixed(2)} each</p>
+                                   <h3 className="font-semibold text-lg">{item.menuItem.name}</h3>
+                                   <p className="text-sm text-gray-500 dark:text-gray-400">${item.menuItem.price.toFixed(2)} each</p>
                                     <button onClick={() => removeFromCart(item.id)} className="text-red-500 hover:text-red-600 text-sm mt-2 flex items-center gap-1">
                                         <TrashIcon className="w-4 h-4" /> Remove
                                     </button>
@@ -145,7 +143,7 @@ const CartPage: React.FC = () => {
                                     <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"><PlusIcon className="w-5 h-5"/></button>
                                </div>
                                <div className="w-20 sm:w-24 text-right font-semibold text-lg">
-                                   ${(item.unitPrice * item.quantity).toFixed(2)}
+                                   ${(item.menuItem.price * item.quantity).toFixed(2)}
                                </div>
                            </div>
                        ))}
@@ -159,7 +157,6 @@ const CartPage: React.FC = () => {
                                 <span>${cartTotal.toFixed(2)}</span>
                             </div>
                             
-                            {/* Voucher Selection */}
                             <div className="space-y-2">
                                 <label htmlFor="voucher" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Apply Voucher</label>
                                 <select 
@@ -193,16 +190,17 @@ const CartPage: React.FC = () => {
                             <div className="space-y-2">
                                 <button 
                                     onClick={handleWalletCheckout}
-                                    disabled={!currentUser}
+                                    disabled={isLoading || !currentUser || finalTotal > currentUser.walletBalance}
                                     className="w-full bg-green-600 text-white font-semibold py-3 rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 >
-                                    Pay with Wallet (${currentUser?.walletBalance.toFixed(2)})
+                                    {isCheckoutLoading ? 'Processing...' : `Pay with Wallet ($${currentUser?.walletBalance.toFixed(2)})`}
                                 </button>
                                 <button 
                                     onClick={handleCheckout}
-                                    className="w-full bg-brand-500 text-white font-semibold py-3 rounded-md hover:bg-brand-600 transition-colors"
+                                    disabled={isLoading}
+                                    className="w-full bg-brand-500 text-white font-semibold py-3 rounded-md hover:bg-brand-600 transition-colors disabled:bg-brand-400"
                                 >
-                                    Proceed to Checkout
+                                    {isCheckoutLoading ? 'Processing...' : 'Proceed to Checkout'}
                                 </button>
                             </div>
                         </div>

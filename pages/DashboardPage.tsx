@@ -5,6 +5,7 @@ import QuickActions from '../components/dashboard/QuickActions';
 import PromotionsCarousel from '../components/dashboard/PromotionsCarousel';
 import MissionsWidget from '../components/dashboard/MissionsWidget';
 import RecentOrders from '../components/dashboard/RecentOrders';
+import DrinkOfTheDay from '../components/dashboard/DrinkOfTheDay';
 
 const DashboardPage: React.FC = () => {
   const currentUser = useCurrentUser();
@@ -19,6 +20,8 @@ const DashboardPage: React.FC = () => {
         <h1 className="text-3xl font-bold">Welcome back, {currentUser.name.split(' ')[0]}!</h1>
         <p className="text-gray-500 dark:text-gray-400">Here's your loyalty summary at a glance.</p>
       </div>
+
+      <DrinkOfTheDay />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">

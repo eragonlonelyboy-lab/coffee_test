@@ -7,26 +7,36 @@ import { useNotification } from '../contexts/NotificationContext';
 const RegisterPage: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const { register } = useAuth();
     const navigate = useNavigate();
     const { addNotification } = useNotification();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true);
 
-        if (!name || !email) {
+        if (!name || !email || !password) {
             setError('Please fill in all fields.');
+            setIsLoading(false);
             return;
         }
 
-        const success = register(name, email);
-        if (success) {
-            addNotification('Registration successful! Welcome.', 'success');
-            navigate('/dashboard');
-        } else {
-            setError('An account with this email already exists.');
+        try {
+            const success = await register(name, email, password);
+            if (success) {
+                addNotification('Registration successful! Welcome.', 'success');
+                navigate('/dashboard');
+            } else {
+                setError('An account with this email already exists.');
+            }
+        } catch (err) {
+            setError('An unexpected error occurred during registration.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -79,6 +89,22 @@ const RegisterPage: React.FC = () => {
                                 placeholder="Email address"
                             />
                         </div>
+                        <div>
+                            <label htmlFor="password" className="sr-only">
+                                Password
+                            </label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                autoComplete="new-password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm"
+                                placeholder="Password"
+                            />
+                        </div>
                     </div>
 
                     {error && <p className="text-sm text-red-500">{error}</p>}
@@ -86,9 +112,10 @@ const RegisterPage: React.FC = () => {
                     <div>
                         <button
                             type="submit"
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
+                            disabled={isLoading}
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:bg-brand-400 disabled:cursor-not-allowed"
                         >
-                            Create Account
+                            {isLoading ? 'Creating Account...' : 'Create Account'}
                         </button>
                     </div>
                 </form>

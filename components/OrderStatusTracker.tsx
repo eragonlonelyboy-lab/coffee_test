@@ -1,25 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { OrderStatus } from '../types';
 import { CheckIcon, ClockIcon } from '../assets/icons';
 
 const statuses = [
-    OrderStatus.InProgress,
-    OrderStatus.ReadyForPickup,
+    OrderStatus.New, // Represents the "In Progress" start
+    OrderStatus.Ready,
     OrderStatus.Completed,
 ];
 
-const OrderStatusTracker: React.FC = () => {
-    const [currentStatusIndex, setCurrentStatusIndex] = useState(0);
+const statusDisplayMap: Record<string, string> = {
+    [OrderStatus.New]: 'In Progress',
+    [OrderStatus.Confirmed]: 'In Progress',
+    [OrderStatus.Preparing]: 'In Progress',
+    [OrderStatus.Ready]: 'Ready for Pickup',
+    [OrderStatus.Completed]: 'Completed',
+};
 
-    useEffect(() => {
-        // Simulate order progress
-        if (currentStatusIndex < statuses.length - 1) {
-            const timer = setTimeout(() => {
-                setCurrentStatusIndex(prev => prev + 1);
-            }, 5000); // Move to next status every 5 seconds
-            return () => clearTimeout(timer);
+interface OrderStatusTrackerProps {
+    currentStatus?: OrderStatus;
+}
+
+const OrderStatusTracker: React.FC<OrderStatusTrackerProps> = ({ currentStatus }) => {
+    
+    const getStatusIndex = (status: OrderStatus | undefined) => {
+        if (!status) return -1;
+        switch(status) {
+            case OrderStatus.New:
+            case OrderStatus.Confirmed:
+            case OrderStatus.Preparing:
+                return 0;
+            case OrderStatus.Ready:
+                return 1;
+            case OrderStatus.Completed:
+                return 2;
+            case OrderStatus.Cancelled:
+            case OrderStatus.Refunded:
+                return -2; // Special case for cancelled
+            default:
+                return -1;
         }
-    }, [currentStatusIndex]);
+    };
+
+    const currentStatusIndex = getStatusIndex(currentStatus);
+
+    if (currentStatusIndex === -2) {
+        return <p className="font-semibold text-red-500">This order has been cancelled.</p>
+    }
 
     return (
         <div className="w-full px-4 sm:px-8">
@@ -41,7 +67,7 @@ const OrderStatusTracker: React.FC = () => {
                             </div>
                             <p className={`mt-2 text-xs sm:text-sm font-semibold transition-colors duration-500 ${
                                 isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'
-                            }`}>{status}</p>
+                            }`}>{statusDisplayMap[status]}</p>
                         </div>
                     );
                 })}

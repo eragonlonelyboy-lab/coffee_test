@@ -13,11 +13,12 @@ const tiers = [
 
 const benefits = [
     { name: 'Base Point Earning', tiers: [
-        `${tierPointMultipliers.Bronze}x`,
-        `${tierPointMultipliers.Silver}x`,
-        `${tierPointMultipliers.Gold}x`,
-        `${tierPointMultipliers.Platinum}x`,
-        `${tierPointMultipliers.Elite}x`,
+        // FIX: Used enum members to correctly access properties on tierPointMultipliers.
+        `${tierPointMultipliers[UserTier.Bronze]}x`,
+        `${tierPointMultipliers[UserTier.Silver]}x`,
+        `${tierPointMultipliers[UserTier.Gold]}x`,
+        `${tierPointMultipliers[UserTier.Platinum]}x`,
+        `${tierPointMultipliers[UserTier.Elite]}x`,
     ] },
     { name: 'Member-Only Offers', tiers: [true, true, true, true, true] },
     { name: 'Free Birthday Drink', tiers: [false, true, true, true, true] },

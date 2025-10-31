@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Order } from '../../types';
 import StarRatingInput from './StarRatingInput';
 import { XMarkIcon } from '../../assets/icons';
-import { outlets } from '../../data/mockData';
 
 interface ReviewPromptModalProps {
   isOpen: boolean;
@@ -15,8 +14,6 @@ const ReviewPromptModal: React.FC<ReviewPromptModalProps> = ({ isOpen, onClose, 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   
-  const outlet = outlets.find(o => o.id === order.outletId);
-
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -38,7 +35,7 @@ const ReviewPromptModal: React.FC<ReviewPromptModalProps> = ({ isOpen, onClose, 
         <form onSubmit={handleSubmit}>
             <div className="p-6">
                 <p className="mb-4">
-                    How was your experience for order <span className="font-semibold">#{order.id.slice(-5)}</span> at <span className="font-semibold">{outlet?.name}</span>?
+                    How was your experience for order <span className="font-semibold">#{order.id.slice(-5)}</span> at <span className="font-semibold">{order.store?.name}</span>?
                 </p>
                 <div className="flex justify-center mb-4">
                      <StarRatingInput rating={rating} setRating={setRating} />

@@ -9,25 +9,23 @@ interface LocationCardProps {
 
 const LocationCard: React.FC<LocationCardProps> = ({ outlet }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
-      <img
-        src={outlet.imageUrl}
-        alt={outlet.name}
-        className="w-full h-48 object-cover"
-      />
-      <div className="p-4 flex flex-col flex-grow">
-        <h3 className="text-lg font-semibold">{outlet.name}</h3>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{outlet.address}</p>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Hours: {outlet.hours}</p>
-        <div className="mt-auto pt-4">
-          <Link
-            to={`/locations/${outlet.id}`}
-            className="text-brand-600 dark:text-brand-400 font-semibold text-sm hover:underline flex items-center gap-1"
-          >
-            <span>View Details</span>
-            <ArrowRightIcon className="w-4 h-4" />
-          </Link>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden group">
+      <div className="relative">
+        <img src={outlet.imageUrl} alt={outlet.name} className="w-full h-48 object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 p-4">
+          <h3 className="text-xl font-bold text-white">{outlet.name}</h3>
+          <p className="text-sm text-gray-200">{outlet.city}</p>
         </div>
+      </div>
+      <div className="p-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400">{outlet.address}</p>
+        <Link
+          to={`/locations/${outlet.id}`}
+          className="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700"
+        >
+          View Details <ArrowRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+        </Link>
       </div>
     </div>
   );

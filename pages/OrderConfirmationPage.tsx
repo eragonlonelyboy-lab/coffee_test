@@ -1,13 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CheckCircleIcon } from '../assets/icons';
 import OrderStatusTracker from '../components/OrderStatusTracker';
+import { useAuth } from '../contexts/AuthContext';
+import { Order } from '../types';
 
 const OrderConfirmationPage: React.FC = () => {
     const { orderId } = useParams<{ orderId: string }>();
+    const { token } = useAuth();
+    const [order, setOrder] = useState<Order | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // In a real app, you'd fetch order details using the orderId.
-    // Here we'll just display a generic confirmation.
+    useEffect(() => {
+        const fetchOrder = async () => {
+            if (!token || !orderId) return;
+            try {
+                const response = await fetch(`/api/orders/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Could not find order");
+                const data = await response.json();
+                setOrder(data.order);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchOrder();
+    }, [orderId, token]);
+
+    if (isLoading) {
+        return <div className="text-center">Loading order confirmation...</div>
+    }
     
     return (
         <div className="max-w-2xl mx-auto text-center">
@@ -22,7 +47,7 @@ const OrderConfirmationPage: React.FC = () => {
                 </p>
 
                 <div className="mt-8">
-                   <OrderStatusTracker />
+                   <OrderStatusTracker currentStatus={order?.status} />
                 </div>
 
                 <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6 flex flex-col sm:flex-row justify-center gap-4">

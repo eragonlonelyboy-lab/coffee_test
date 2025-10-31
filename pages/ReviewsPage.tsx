@@ -2,6 +2,7 @@ import React from 'react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import UserReviewHistory from '../components/reviews/UserReviewHistory';
 import TopOutletsLeaderboard from '../components/reviews/TopOutletsLeaderboard';
+import TopDrinksLeaderboard from '../components/TopDrinksLeaderboard';
 
 const ReviewsPage: React.FC = () => {
     const currentUser = useCurrentUser();
@@ -19,6 +20,7 @@ const ReviewsPage: React.FC = () => {
                 </div>
                 <div className="space-y-8">
                     <TopOutletsLeaderboard />
+                    <TopDrinksLeaderboard />
                 </div>
             </div>
         </div>

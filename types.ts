@@ -1,9 +1,11 @@
+// types.ts
+
 export enum UserTier {
-    Bronze = 'Bronze',
-    Silver = 'Silver',
-    Gold = 'Gold',
-    Platinum = 'Platinum',
-    Elite = 'Elite',
+    Bronze = 'BRONZE',
+    Silver = 'SILVER',
+    Gold = 'GOLD',
+    Platinum = 'PLATINUM',
+    Elite = 'ELITE',
 }
 
 export interface User {
@@ -13,18 +15,19 @@ export interface User {
     tier: UserTier;
     points: number;
     walletBalance: number;
+    phone?: string | null;
 }
 
-export interface DrinkCustomizationOption {
+export interface CustomizationOption {
     id: string;
     name: string;
     priceModifier?: number;
 }
 
-export interface DrinkCustomization {
+export interface Customization {
     id: string;
     name: string;
-    options: DrinkCustomizationOption[];
+    options: CustomizationOption[];
 }
 
 export interface Drink {
@@ -32,54 +35,60 @@ export interface Drink {
     name: string;
     description: string;
     price: number;
-    category: 'Hot Coffees' | 'Iced Coffees' | 'Teas & More';
+    category: string;
     imageUrls: string[];
-    customizations?: DrinkCustomization[];
+    customizations?: Customization[];
     rating: number;
     reviewCount: number;
-}
-
-export interface CartItem {
-    id: string; // Unique ID for the cart item instance
-    drink: Drink;
-    quantity: number;
-    customizations: Record<string, string>; // { customizationId: optionId }
-    unitPrice: number;
 }
 
 export interface Outlet {
     id: string;
     name: string;
     address: string;
-    hours: string;
+    city: string;
+    latitude: number;
+    longitude: number;
     imageUrl: string;
 }
 
 export enum OrderStatus {
-    InProgress = 'In Progress',
-    ReadyForPickup = 'Ready for Pickup',
-    Completed = 'Completed',
-    Cancelled = 'Cancelled',
+    New = 'NEW',
+    Pending = 'PENDING',
+    Confirmed = 'CONFIRMED',
+    Preparing = 'PREPARING',
+    Ready = 'READY',
+    Completed = 'COMPLETED',
+    Cancelled = 'CANCELLED',
+    Refunded = 'REFUNDED'
 }
 
 export interface OrderItem {
-    id: string; // Unique ID for this specific item in the order
-    drink: Drink;
+    id: string;
     quantity: number;
-    unitPrice: number;
-    customizations: Record<string, string>;
+    linePrice: number;
+    menuItem: {
+        name: string;
+    };
 }
 
 export interface Order {
     id: string;
     userId: string;
-    outletId: string;
-    date: string; // ISO string
-    items: OrderItem[];
-    total: number;
+    storeId: string;
+    createdAt: string;
     status: OrderStatus;
-    preparationTime: number; // in minutes
-    reviewId?: string; // Link to a review if one exists
+    items: OrderItem[];
+    totalAmount: number;
+    store?: { name: string };
+}
+
+export interface CartItem {
+    id: string;
+    quantity: number;
+    options: Record<string, string>;
+    menuItemId: string;
+    menuItem: Drink;
 }
 
 export interface Promotion {
@@ -87,22 +96,34 @@ export interface Promotion {
     title: string;
     description: string;
     imageUrl: string;
+    code: string | null;
+    discountPct: number | null;
+    minSpend: number | null;
+    startAt: string | null;
+    endAt: string | null;
+    active: boolean;
 }
 
-export enum MissionStatus {
-    InProgress = 'In Progress',
-    Completed = 'Completed',
-}
-
+// Represents the Mission model from the database
 export interface Mission {
     id: string;
     title: string;
     description: string;
-    points: number;
-    goal: number;
-    progress: number;
-    status: MissionStatus;
+    rewardPoints: number;
+    type: string;
+    startDate: string;
+    endDate: string;
 }
+
+// Represents the data structure returned by `/api/missions/me`
+export interface UserMissionCompletion {
+    id: string;
+    userId: string;
+    missionId: string;
+    completedAt: string;
+    mission: Mission;
+}
+
 
 export interface Reward {
     id: string;
@@ -148,9 +169,11 @@ export interface Review {
     orderId: string;
     storeId: string;
     userName: string;
-    rating: number; // 1-5
+    rating: number;
     comment: string;
-    date: string; // ISO string
+    date: string;
+    store?: { name: string };
+    user?: { name: string };
 }
 
 export type NotificationType = 'success' | 'error' | 'info' | 'warning';
@@ -160,4 +183,41 @@ export interface Notification {
   message: string;
   type: NotificationType;
   duration?: number;
+}
+
+export interface BackendNotification {
+    id: string;
+    userId: string | null;
+    type: string;
+    channel: string;
+    payload: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface SalesReportRow {
+    storeId: string;
+    storeName: string; // Enriched on frontend
+    _count: {
+        id: number;
+    };
+    _sum: {
+        totalAmount: number | null;
+    };
+}
+
+export interface PopularItemReportRow {
+    menuItemId: string;
+    itemName: string; // Enriched on frontend
+    itemImage: string; // Enriched on frontend
+    _sum: {
+        quantity: number | null;
+    };
+}
+
+
+export interface AIPairingSuggestion {
+    itemName: string;
+    reason: string;
 }

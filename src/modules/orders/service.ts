@@ -1,86 +1,66 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, DeliveryType, OrderStatus } from "@prisma/client";
 import QRCode from "qrcode";
 const prisma = new PrismaClient();
 
-// Cart Services
-export const getCart = (userId: string) => {
-  return prisma.cartItem.findMany({
-    where: { userId },
-    include: { menuItem: true },
-    orderBy: { createdAt: "asc" },
-  });
-};
-
-export const addToCart = (userId: string, menuItemId: string, quantity: number, options: any) => {
-  return prisma.cartItem.create({
-    data: {
-      userId,
-      menuItemId,
-      quantity,
-      options,
-    },
-  });
-};
-
-export const updateCartItem = (cartItemId: string, quantity: number) => {
-  return prisma.cartItem.update({
-    where: { id: cartItemId },
-    data: { quantity },
-  });
-};
-
-export const removeFromCart = (cartItemId: string) => {
-  return prisma.cartItem.delete({
-    where: { id: cartItemId },
-  });
-};
+interface OrderItemInput {
+    menuItemId: string;
+    quantity: number;
+    // Add other customizations if needed
+}
 
 // Order Services
-export const createOrderFromCart = async (userId: string, storeId: string, fulfillment: string) => {
-  const cartItems = await getCart(userId);
-  if (cartItems.length === 0) {
-    throw new Error("Cart is empty");
+export const createOrder = async (userId: string, storeId: string, deliveryType: DeliveryType, items: OrderItemInput[]) => {
+  if (items.length === 0) {
+    throw new Error("Cannot create an order with no items");
   }
 
-  const total = cartItems.reduce((sum, item) => {
-    return sum + item.menuItem.price * item.quantity;
+  const menuItemIds = items.map(item => item.menuItemId);
+  const menuItems = await prisma.menuItem.findMany({
+      where: { id: { in: menuItemIds } }
+  });
+
+  const totalAmount = items.reduce((sum, item) => {
+      const menuItem = menuItems.find(mi => mi.id === item.menuItemId);
+      if (!menuItem) throw new Error(`Menu item with id ${item.menuItemId} not found`);
+      return sum + menuItem.basePrice * item.quantity;
   }, 0);
 
-  const order = await prisma.$transaction(async (tx) => {
-    const createdOrder = await tx.order.create({
+  const orderCounter = await prisma.order.count() + 1001;
+
+  const order = await prisma.order.create({
       data: {
-        userId,
-        storeId,
-        total,
-        fulfillment,
-        items: {
-          create: cartItems.map((item) => ({
-            menuItemId: item.menuItemId,
-            name: item.menuItem.name,
-            quantity: item.quantity,
-            price: item.menuItem.price,
-            options: item.options,
-          })),
-        },
+          orderNumber: `LB${orderCounter}`,
+          userId,
+          storeId,
+          totalAmount,
+          deliveryType,
+          status: OrderStatus.NEW, // Orders start as NEW
+          items: {
+              create: items.map(item => {
+                  const menuItem = menuItems.find(mi => mi.id === item.menuItemId);
+                  if (!menuItem) {
+                      // This should not happen due to the check above, but as a safeguard:
+                      throw new Error(`Menu item with id ${item.menuItemId} disappeared during transaction.`);
+                  }
+                  return {
+                      menuItemId: item.menuItemId,
+                      quantity: item.quantity,
+                      linePrice: menuItem.basePrice * item.quantity,
+                      // Add customizations here if needed
+                  };
+              }),
+          },
       },
       include: {
-        items: true,
+          items: {
+              include: {
+                  menuItem: {
+                      select: { name: true }
+                  }
+              }
+          },
+          store: true,
       },
-    });
-
-    // generate QR code for pickup
-    const qr = await QRCode.toDataURL(createdOrder.id);
-    const orderWithQr = await tx.order.update({
-        where: { id: createdOrder.id },
-        data: { qrCode: qr },
-        include: { items: true, store: true }
-    });
-
-    await tx.cartItem.deleteMany({
-      where: { userId },
-    });
-
-    return orderWithQr;
   });
 
   return order;
@@ -89,7 +69,16 @@ export const createOrderFromCart = async (userId: string, storeId: string, fulfi
 export const getUserOrders = (userId: string) => {
   return prisma.order.findMany({
     where: { userId },
-    include: { items: true, store: true },
+    include: { 
+        items: {
+            include: {
+                menuItem: {
+                    select: { name: true }
+                }
+            }
+        }, 
+        store: true 
+    },
     orderBy: { createdAt: "desc" },
   });
 };
@@ -97,11 +86,20 @@ export const getUserOrders = (userId: string) => {
 export const getOrderById = (orderId: string, userId: string) => {
   return prisma.order.findFirst({
     where: { id: orderId, userId },
-    include: { items: true, store: true },
+     include: { 
+        items: {
+            include: {
+                menuItem: {
+                    select: { name: true }
+                }
+            }
+        }, 
+        store: true 
+    },
   });
 };
 
-export const updateOrderStatus = (orderId: string, status: string) => {
+export const updateOrderStatus = (orderId: string, status: OrderStatus) => {
     return prisma.order.update({
         where: { id: orderId },
         data: { status }

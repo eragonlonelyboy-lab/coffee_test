@@ -24,7 +24,7 @@ export const claimMissionReward = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).userId;
         const { missionId } = req.params;
-        const result = await missionService.claimMission(userId, missionId);
+        const result = await missionService.completeMission(userId, missionId);
         res.json(result);
     } catch (err: any) {
         res.status(400).json({ message: err.message });

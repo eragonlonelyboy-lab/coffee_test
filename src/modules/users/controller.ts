@@ -13,9 +13,9 @@ export const registerUser = async (req: Request, res: Response) => {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return res.status(409).json({ message: "User already exists" });
 
-    const hashed = await hashPassword(password);
+    const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
-      data: { email, password: hashed, name, phone },
+      data: { email, passwordHash, name, phone },
     });
 
     const token = generateToken(user.id);
@@ -32,7 +32,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const valid = await comparePassword(password, user.password);
+    const valid = await comparePassword(password, user.passwordHash);
     if (!valid) return res.status(401).json({ message: "Invalid password" });
 
     const token = generateToken(user.id);
@@ -61,7 +61,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     const { name, phone, dateOfBirth } = req.body;
     const updated = await prisma.user.update({
       where: { id: userId },
-      data: { name, phone, dateOfBirth },
+      data: { name, phone, dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined },
     });
     return res.json({ message: "Profile updated", user: updated });
   } catch {

@@ -3,12 +3,14 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useTheme } from '../App';
-import { CoffeeCupIcon, UserIcon, SunIcon, MoonIcon, ShoppingCartIcon, Bars3Icon, XMarkIcon, WalletIcon } from '../assets/icons';
+import { useLanguage, Language } from '../contexts/LanguageContext';
+import { CoffeeCupIcon, UserIcon, SunIcon, MoonIcon, ShoppingCartIcon, Bars3Icon, XMarkIcon, WalletIcon, BellIcon } from '../assets/icons';
 
 const Header: React.FC = () => {
     const { currentUser } = useAuth();
     const { cart } = useCart();
     const { theme, toggleTheme } = useTheme();
+    const { language, setLanguage } = useLanguage();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
 
@@ -82,6 +84,28 @@ const Header: React.FC = () => {
         </div>
     );
 
+    const LanguageSwitcher = () => {
+        const languages: { code: Language; label: string }[] = [{ code: 'en', label: 'EN' }, { code: 'es', label: 'ES' }];
+        return (
+            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full p-0.5">
+                {languages.map(lang => (
+                    <button
+                        key={lang.code}
+                        onClick={() => setLanguage(lang.code)}
+                        className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${
+                            language === lang.code
+                                ? 'bg-white dark:bg-gray-700 shadow text-brand-600 dark:text-brand-400'
+                                : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'
+                        }`}
+                        aria-label={`Switch to ${lang.label}`}
+                    >
+                        {lang.label}
+                    </button>
+                ))}
+            </div>
+        );
+    };
+
     return (
         <>
             <header className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800">
@@ -98,6 +122,7 @@ const Header: React.FC = () => {
                             {currentUser && <NavLink to="/rewards" className={navLinkClasses}>Rewards</NavLink>}
                         </nav>
                         <div className="flex items-center gap-2 sm:gap-4">
+                             <div className="hidden sm:block"><LanguageSwitcher /></div>
                             <button
                                 onClick={toggleTheme}
                                 aria-label="Toggle theme"
@@ -117,6 +142,11 @@ const Header: React.FC = () => {
                                     <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">{cartItemCount}</span>
                                 )}
                             </Link>
+                             {currentUser && (
+                                <Link to="/notifications" aria-label="View notifications" className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                                    <BellIcon className="h-6 w-6" />
+                                </Link>
+                            )}
                             <div className="hidden md:flex items-center">
                                 {currentUser ? (
                                     <Link to="/profile" className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">

@@ -1,4 +1,5 @@
-import { User, UserTier, Drink, Outlet, Order, OrderStatus, Promotion, Mission, MissionStatus, Reward, PointTransaction, WalletTransaction, Voucher, Review } from '../types';
+// FIX: Removed MissionStatus from import as it is not defined in types.ts and is no longer used.
+import { User, UserTier, Drink, Outlet, Order, OrderStatus, Promotion, Mission, Reward, PointTransaction, WalletTransaction, Voucher, Review } from '../types';
 
 export const users: User[] = [
     { id: 'user-1', name: 'Alex Doe', email: 'alex@example.com', tier: UserTier.Gold, points: 2150, walletBalance: 75.50 },
@@ -53,41 +54,24 @@ export const drinks: Drink[] = [
 ];
 
 export const outlets: Outlet[] = [
-    { id: 'o-1', name: 'Downtown Roastery', address: '123 Main St, Metroville', hours: '6am - 8pm', imageUrl: 'https://picsum.photos/seed/downtown-cafe/400/300' },
-    { id: 'o-2', name: 'Uptown Express', address: '456 Oak Ave, Uptown', hours: '7am - 6pm', imageUrl: 'https://picsum.photos/seed/uptown-cafe/400/300' },
-    { id: 'o-3', name: 'Riverfront Perk', address: '789 River Rd, Riverside', hours: '8am - 9pm', imageUrl: 'https://picsum.photos/seed/river-cafe/400/300' },
+    { id: 'o-1', name: 'Downtown Roastery', address: '123 Main St', city: 'Metroville', latitude: 34.0522, longitude: -118.2437, imageUrl: 'https://picsum.photos/seed/downtown-cafe/400/300' },
+    { id: 'o-2', name: 'Uptown Express', address: '456 Oak Ave', city: 'Uptown', latitude: 34.0622, longitude: -118.2537, imageUrl: 'https://picsum.photos/seed/uptown-cafe/400/300' },
+    { id: 'o-3', name: 'Riverfront Perk', address: '789 River Rd', city: 'Riverside', latitude: 34.0422, longitude: -118.2637, imageUrl: 'https://picsum.photos/seed/river-cafe/400/300' },
 ];
 
-export const orders: Order[] = [
-    {
-        id: 'ord-12345', userId: 'user-1', outletId: 'o-1', date: new Date(Date.now() - 86400000 * 2).toISOString(),
-        items: [{ id: 'oi-1', drink: drinks[0], quantity: 1, unitPrice: 5.25, customizations: { 'c-1': 'o-3', 'c-2': 'o-5' } }],
-        total: 5.25, status: OrderStatus.Completed, preparationTime: 8, reviewId: 'rev-1'
-    },
-    {
-        id: 'ord-12346', userId: 'user-1', outletId: 'o-2', date: new Date(Date.now() - 86400000).toISOString(),
-        items: [
-            { id: 'oi-2', drink: drinks[1], quantity: 1, unitPrice: 5.25, customizations: {} },
-            { id: 'oi-3', drink: drinks[2], quantity: 1, unitPrice: 3.00, customizations: { 'c-4': 'o-11' } }
-        ],
-        total: 8.25, status: OrderStatus.Completed, preparationTime: 10
-    },
-     {
-        id: 'ord-12347', userId: 'user-1', outletId: 'o-1', date: new Date().toISOString(),
-        items: [{ id: 'oi-4', drink: drinks[4], quantity: 1, unitPrice: 4.25, customizations: {} }],
-        total: 4.25, status: OrderStatus.InProgress, preparationTime: 5
-    }
-];
-
+// FIX: Added missing properties to Promotion objects to match the Promotion type definition.
 export const promotions: Promotion[] = [
-    { id: 'p-1', title: 'Double Points Tuesday', description: 'Earn 2x points on all purchases every Tuesday!', imageUrl: 'https://picsum.photos/seed/promo-double/600/400' },
-    { id: 'p-2', title: 'Happy Hour 2-4pm', description: 'Get 50% off all iced drinks from 2pm to 4pm on weekdays.', imageUrl: 'https://picsum.photos/seed/promo-happy/600/400' },
+    { id: 'p-1', title: 'Double Points Tuesday', description: 'Earn 2x points on all purchases every Tuesday!', imageUrl: 'https://picsum.photos/seed/promo-double/600/400', code: null, discountPct: null, minSpend: null, startAt: null, endAt: null, active: true },
+    { id: 'p-2', title: 'Happy Hour 2-4pm', description: 'Get 50% off all iced drinks from 2pm to 4pm on weekdays.', imageUrl: 'https://picsum.photos/seed/promo-happy/600/400', code: null, discountPct: 50, minSpend: null, startAt: null, endAt: null, active: true },
 ];
 
+// FIX: Updated the missions array to conform to the Mission type.
+// Renamed 'points' to 'rewardPoints' and added 'type', 'startDate', and 'endDate'.
+// Removed properties that are not in the Mission type: 'goal', 'progress', 'status'.
 export const missions: Mission[] = [
-    { id: 'm-1', title: 'Morning Rush', description: 'Order 5 drinks before 9am in one week.', points: 100, goal: 5, progress: 3, status: MissionStatus.InProgress },
-    { id: 'm-2', title: 'Taste Explorer', description: 'Try 3 different drinks from the "Teas & More" category.', points: 75, goal: 3, progress: 1, status: MissionStatus.InProgress },
-    { id: 'm-3', title: 'Weekly Regular', description: 'Visit us 3 times in one week.', points: 50, goal: 3, progress: 3, status: MissionStatus.Completed },
+    { id: 'm-1', title: 'Morning Rush', description: 'Order 5 drinks before 9am in one week.', rewardPoints: 100, type: 'PURCHASE', startDate: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString(), endDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString() },
+    { id: 'm-2', title: 'Taste Explorer', description: 'Try 3 different drinks from the "Teas & More" category.', rewardPoints: 75, type: 'EXPLORE', startDate: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString(), endDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString() },
+    { id: 'm-3', title: 'Weekly Regular', description: 'Visit us 3 times in one week.', rewardPoints: 50, type: 'VISIT', startDate: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString(), endDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString() },
 ];
 
 export const rewards: Reward[] = [

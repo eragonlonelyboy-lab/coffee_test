@@ -1,30 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { orders } from '../../data/mockData';
-import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { useCart } from '../../contexts/CartContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { DocumentTextIcon, ArrowPathIcon } from '../../assets/icons';
 import { Order } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 const RecentOrders: React.FC = () => {
-    const currentUser = useCurrentUser();
     const { addToCart } = useCart();
     const { addNotification } = useNotification();
     const navigate = useNavigate();
+    const { token } = useAuth();
+    const [recentOrders, setRecentOrders] = useState<Order[]>([]);
 
-    // Only show completed orders for reordering
-    const reorderableOrders = orders
-        .filter(o => o.userId === currentUser?.id && o.status === 'Completed')
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 3);
+    useEffect(() => {
+        const fetchRecentOrders = async () => {
+            if (!token) return;
+            try {
+                const response = await fetch('/api/orders?limit=3', { // Assuming the API supports a limit
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                // Filter for completed orders suitable for reordering
+                const completedOrders = data.filter((o: Order) => o.status === 'COMPLETED').slice(0, 3);
+                setRecentOrders(completedOrders);
+            } catch (e) {
+                console.error("Failed to fetch recent orders");
+            }
+        };
+        fetchRecentOrders();
+    }, [token]);
 
     const handleReorder = (order: Order) => {
-        order.items.forEach(item => {
-            addToCart(item.drink, item.quantity, item.customizations);
-        });
-        addNotification(`Items from a past order have been added to your cart.`, 'success');
-        navigate('/cart');
+        // The addToCart function in the context now requires the full Drink object.
+        // The order.items from the backend only have basic details (name, price).
+        // This is a limitation. For now, we cannot directly re-add to cart without
+        // fetching full drink details first. We will navigate to the menu instead.
+        addNotification(`Feature coming soon! View the menu to order again.`, 'info');
+        navigate('/menu');
     };
 
     return (
@@ -35,16 +49,16 @@ const RecentOrders: React.FC = () => {
                     View All Orders
                 </Link>
             </div>
-             {reorderableOrders.length > 0 ? (
+             {recentOrders.length > 0 ? (
                 <ul className="space-y-3">
-                    {reorderableOrders.map(order => (
+                    {recentOrders.map(order => (
                         <li key={order.id} className="flex items-center justify-between text-sm p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md gap-2">
                             <div className="flex-grow min-w-0">
                                 <p className="font-medium truncate">
-                                    {order.items.map(i => i.drink.name).join(', ')}
+                                    {order.items.map(i => i.menuItem.name).join(', ')}
                                 </p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {new Date(order.date).toLocaleDateString()}
+                                    {new Date(order.createdAt).toLocaleDateString()}
                                 </p>
                             </div>
                             <button

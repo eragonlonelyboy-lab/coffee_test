@@ -13,7 +13,7 @@ const PointsHistory: React.FC<PointsHistoryProps> = ({ transactions }) => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {transactions.length > 0 ? (
-            transactions.map(t => (
+            transactions.slice(0, 10).map(t => ( // Show top 10 most recent
               <li key={t.id} className="p-4 flex justify-between items-center">
                 <div>
                   <p className="font-medium">{t.description}</p>

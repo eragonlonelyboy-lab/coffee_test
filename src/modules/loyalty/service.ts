@@ -1,10 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-export const creditPoints = async (userId: string, points: number, source = "ORDER") => {
+export const creditPoints = async (userId: string, points: number, description = "Order credit") => {
   // create loyalty record and increment user points
-  await prisma.loyaltyRecord.create({ data: { userId, points, source } });
-  await prisma.user.update({ where: { id: userId }, data: { points: { increment: points } } });
+  await prisma.$transaction([
+    prisma.loyaltyRecord.create({ data: { userId, pointsEarned: points, description } }),
+    prisma.user.update({ where: { id: userId }, data: { points: { increment: points } } })
+  ]);
 };
 
 export const getPoints = async (userId: string) => {
@@ -12,15 +14,16 @@ export const getPoints = async (userId: string) => {
   return user?.points ?? 0;
 };
 
+export const getLoyaltyHistory = async (userId: string) => {
+    return prisma.loyaltyRecord.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' }
+    });
+};
+
 export const redeemVoucher = async (userId: string, voucherCode: string) => {
-  const v = await prisma.voucher.findUnique({ where: { code: voucherCode } });
-  if (!v || !v.isActive) throw new Error("Invalid voucher");
-  // simple points cost logic
-  if (v.pointsCost) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if ((user?.points || 0) < v.pointsCost) throw new Error("Insufficient points");
-    await prisma.user.update({ where: { id: userId }, data: { points: { decrement: v.pointsCost } } });
-    return { success: true, voucher: v };
-  }
-  return { success: true, voucher: v };
+  // This function seems to reference a `Voucher` model that doesn't exist in the new schema.
+  // This would need to be re-implemented based on the `Promotion` model.
+  // For now, we'll throw an error indicating it's not implemented.
+  throw new Error("Voucher redemption logic needs to be updated for the new schema.");
 };

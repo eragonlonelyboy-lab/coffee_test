@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { HashRouter as Router, Route, Routes } from 'react-router-dom';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // --- Theme Management ---
 type Theme = 'light' | 'dark';
@@ -73,6 +74,8 @@ import WalletPage from './pages/WalletPage';
 import VouchersPage from './pages/VouchersPage';
 import ReferralsPage from './pages/ReferralsPage';
 import ReviewsPage from './pages/ReviewsPage';
+import NotificationsPage from './pages/NotificationsPage';
+import AdminReportsPage from './pages/AdminReportsPage';
 
 
 const AppContent: React.FC = () => {
@@ -105,6 +108,8 @@ const AppContent: React.FC = () => {
                                     <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
                                     <Route path="/vouchers" element={<ProtectedRoute><VouchersPage /></ProtectedRoute>} />
                                     <Route path="/referrals" element={<ProtectedRoute><ReferralsPage /></ProtectedRoute>} />
+                                    <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+                                    <Route path="/admin/reports" element={<ProtectedRoute><AdminReportsPage /></ProtectedRoute>} />
                                 </Routes>
                             </main>
                             <Footer />
@@ -120,7 +125,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
     return (
         <ThemeProvider>
-            <AppContent />
+            <LanguageProvider>
+                <AppContent />
+            </LanguageProvider>
         </ThemeProvider>
     );
 };

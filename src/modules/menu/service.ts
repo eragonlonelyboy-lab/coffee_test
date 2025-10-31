@@ -1,33 +1,43 @@
 import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
 
-export const getAllMenuItems = async (storeId?: string, category?: string) => {
-  return prisma.menuItem.findMany({
-    where: { 
-      available: true, 
-      ...(storeId && { storeId }),
-      ...(category && { category })
-    },
-    orderBy: { popularity: "desc" },
-  });
+export const getMenuItems = async (languageCode: string = 'en') => {
+    const items = await prisma.menuItem.findMany({
+        where: { store: { name: { not: undefined } } } // A filter to ensure items belong to a store
+    });
+
+    if (languageCode === 'en' || languageCode.startsWith('en')) {
+        return items;
+    }
+
+    const itemIds = items.map(item => item.id);
+    const translations = await prisma.menuTranslation.findMany({
+        where: {
+            menuItemId: { in: itemIds },
+            languageCode,
+        }
+    });
+
+    const translatedItems = items.map(item => {
+        const translation = translations.find(t => t.menuItemId === item.id);
+        return translation ? {
+            ...item,
+            name: translation.name,
+            description: translation.description,
+        } : item;
+    });
+
+    return translatedItems;
 };
 
-export const getMenuItemById = async (id: string) => {
-  return prisma.menuItem.findUnique({ where: { id } });
+
+export const getAllStores = async () => {
+    return prisma.store.findMany();
 };
 
-export const createMenuItem = async (data: any) => {
-  return prisma.menuItem.create({ data });
-};
-
-export const updateMenuItem = async (id: string, data: any) => {
-  return prisma.menuItem.update({ where: { id }, data });
-};
-
-export const deleteMenuItem = async (id: string) => {
-  return prisma.menuItem.delete({ where: { id } });
-};
-
-export const getStores = async () => {
-  return prisma.store.findMany({ include: { menuItems: true } });
+export const getStoreById = async (storeId: string) => {
+    return prisma.store.findUnique({
+        where: { id: storeId }
+    });
 };

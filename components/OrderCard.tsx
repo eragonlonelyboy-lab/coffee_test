@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Order, OrderStatus } from '../types';
-import { outlets } from '../data/mockData';
 import { XCircleIcon, PencilIcon } from '../assets/icons';
 
 interface OrderCardProps {
@@ -9,17 +8,30 @@ interface OrderCardProps {
     onLeaveReview?: (order: Order) => void;
 }
 
-const statusStyles: Record<OrderStatus, string> = {
-    [OrderStatus.InProgress]: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
-    [OrderStatus.ReadyForPickup]: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
-    [OrderStatus.Completed]: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
-    [OrderStatus.Cancelled]: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+const getDisplayStatus = (status: OrderStatus) => {
+    switch(status) {
+        case OrderStatus.New:
+        case OrderStatus.Confirmed:
+        case OrderStatus.Preparing:
+            return 'In Progress';
+        case OrderStatus.Ready:
+            return 'Ready for Pickup';
+        default:
+            return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    }
+}
+
+const statusStyles: Record<string, string> = {
+    'In Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+    'Ready for Pickup': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
+    'Completed': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+    'Cancelled': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+    'Refunded': 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300',
 };
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, onCancelOrder, onLeaveReview }) => {
     const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
-    const outlet = outlets.find(o => o.id === order.outletId);
-
+    
     const handleCancelClick = () => {
         setIsConfirmingCancel(true);
     };
@@ -53,39 +65,42 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onCancelOrder, onLeaveRevi
         </div>
     );
 
-    const canReview = order.status === OrderStatus.Completed && !order.reviewId && onLeaveReview;
+    const canCancel = [OrderStatus.New, OrderStatus.Confirmed, OrderStatus.Preparing].includes(order.status);
+    // Let user attempt to review any completed order. Backend will handle if already reviewed.
+    const canReview = order.status === OrderStatus.Completed && onLeaveReview;
+    const displayStatus = getDisplayStatus(order.status);
 
     return (
         <>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-start mb-3">
                 <div>
-                    <h3 className="font-semibold text-lg">{outlet?.name || 'Unknown Outlet'}</h3>
+                    <h3 className="font-semibold text-lg">{order.store?.name || 'Unknown Outlet'}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Order #{order.id} &bull; {new Date(order.date).toLocaleDateString()}
+                        Order #{order.id} &bull; {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                 </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[order.status]}`}>
-                    {order.status}
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[displayStatus]}`}>
+                    {displayStatus}
                 </span>
             </div>
             <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                 <ul className="space-y-2 text-sm">
                     {order.items.map(item => (
                         <li key={item.id} className="flex justify-between">
-                            <span>{item.quantity}x {item.drink.name}</span>
-                            <span>${(item.unitPrice * item.quantity).toFixed(2)}</span>
+                            <span>{item.quantity}x {item.menuItem.name}</span>
+                            <span>${item.linePrice.toFixed(2)}</span>
                         </li>
                     ))}
                 </ul>
             </div>
             <div className="border-t border-gray-200 dark:border-gray-700 mt-3 pt-3 flex justify-between items-center">
                 <span className="font-semibold">Total</span>
-                <span className="font-semibold">${order.total.toFixed(2)}</span>
+                <span className="font-semibold">${order.totalAmount.toFixed(2)}</span>
             </div>
-            {(order.status === OrderStatus.InProgress || canReview) && (
+            {(canCancel || canReview) && (
                  <div className="border-t border-gray-200 dark:border-gray-700 mt-3 pt-3">
-                     {order.status === OrderStatus.InProgress && (
+                     {canCancel && (
                          <button
                             onClick={handleCancelClick}
                             className="w-full text-center px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 rounded-md hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"

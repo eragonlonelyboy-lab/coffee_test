@@ -7,8 +7,17 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-    const { currentUser } = useAuth();
+    const { currentUser, isInitializing } = useAuth();
     const location = useLocation();
+
+    if (isInitializing) {
+        // You can replace this with a more sophisticated loading spinner
+        return (
+            <div className="flex justify-center items-center h-64">
+                <p>Loading...</p>
+            </div>
+        );
+    }
 
     if (!currentUser) {
         // Redirect them to the /login page, but save the current location they were

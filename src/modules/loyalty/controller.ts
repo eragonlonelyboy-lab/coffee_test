@@ -1,4 +1,3 @@
-// ai: create file path:src/modules/loyalty/controller.ts
 import { Request, Response } from "express";
 import * as service from "./service";
 
@@ -6,6 +5,12 @@ export const getPointsHandler = async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const pts = await service.getPoints(userId);
   return res.json({ points: pts });
+};
+
+export const getHistoryHandler = async (req: Request, res: Response) => {
+    const userId = (req as any).userId;
+    const history = await service.getLoyaltyHistory(userId);
+    return res.json({ history });
 };
 
 export const redeemHandler = async (req: Request, res: Response) => {

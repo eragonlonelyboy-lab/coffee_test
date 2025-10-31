@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useCart } from '../contexts/CartContext';
-import { CoffeeCupIcon, UserIcon, ShoppingCartIcon } from '../assets/icons';
+import { useAuth } from './contexts/AuthContext';
+import { useCart } from './contexts/CartContext';
+import { CoffeeCupIcon, UserIcon, ShoppingCartIcon } from './assets/icons';
 
 const Header: React.FC = () => {
     const { currentUser } = useAuth();

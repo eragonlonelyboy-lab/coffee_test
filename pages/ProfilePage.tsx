@@ -85,22 +85,28 @@ const ProfilePage: React.FC = () => {
                         )}
                     </div>
 
-                    <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                    <div className="mt-8 flex flex-wrap justify-center gap-4">
                          <button
                             onClick={() => setIsEditModalOpen(true)}
-                            className="w-full sm:w-auto bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                         >
                             Edit Profile
                         </button>
                         <Link
                             to="/referrals"
-                            className="w-full sm:w-auto text-center bg-brand-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-brand-700 transition-colors"
+                            className="text-center bg-brand-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-brand-700 transition-colors"
                         >
                             Refer a Friend
                         </Link>
+                         <Link
+                            to="/admin/reports"
+                            className="text-center bg-blue-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                            Admin Reports
+                        </Link>
                         <button
                             onClick={handleLogout}
-                            className="w-full sm:w-auto bg-red-500 text-white font-semibold px-6 py-2 rounded-md hover:bg-red-600 transition-colors"
+                            className="bg-red-500 text-white font-semibold px-6 py-2 rounded-md hover:bg-red-600 transition-colors"
                         >
                             Log Out
                         </button>

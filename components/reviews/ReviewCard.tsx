@@ -6,17 +6,19 @@ import { outlets } from '../../data/mockData';
 
 interface ReviewCardProps {
     review: Review;
+    onDelete?: (reviewId: string) => void;
 }
 
-const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
-    const { currentUser, deleteReview } = useAuth();
+const ReviewCard: React.FC<ReviewCardProps> = ({ review, onDelete }) => {
+    const { currentUser } = useAuth();
     const isOwner = currentUser?.id === review.userId;
     
-    const outlet = outlets.find(o => o.id === review.storeId);
+    // The backend can provide the store name directly in the review object.
+    const storeName = review.store?.name || outlets.find(o => o.id === review.storeId)?.name || 'Unknown Store';
 
     const handleDelete = () => {
-        if (window.confirm('Are you sure you want to delete this review?')) {
-            deleteReview(review.id);
+        if (onDelete && window.confirm('Are you sure you want to delete this review?')) {
+            onDelete(review.id);
         }
     };
 
@@ -31,10 +33,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
                         <div>
                             <p className="font-semibold">{review.userName}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Reviewed: <span className="font-medium text-gray-600 dark:text-gray-300">{outlet?.name || 'Unknown Store'}</span>
+                                Reviewed: <span className="font-medium text-gray-600 dark:text-gray-300">{storeName}</span>
                             </p>
                         </div>
-                         {isOwner && (
+                         {isOwner && onDelete && (
                             <div className="flex gap-2">
                                 <button onClick={handleDelete} className="p-1 text-gray-400 hover:text-red-500">
                                     <TrashIcon className="w-5 h-5" />
